@@ -25,12 +25,14 @@ def admin_required(f):
 @admin_required
 def dashboard():
     reports = DailyReport.query.order_by(DailyReport.date.desc()).limit(5).all()
-    messages = Message.query.filter_by(receiver_id=current_user.id, is_read=False).count()
+    unread_messages = Message.query.filter_by(receiver_id=current_user.id, is_read=False).count()
+    total_messages = Message.query.count()
     teachers = User.query.filter_by(role='teacher').count()
     students = User.query.filter_by(role='student').count()
     return render_template('admin/dashboard.html', 
                          reports=reports, 
-                         unread_messages=messages,
+                         unread_messages=unread_messages,
+                         total_messages=total_messages,
                          teachers=teachers,
                          students=students)
 

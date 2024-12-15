@@ -33,6 +33,16 @@
         </div>
     </div>
 
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Total Messages</h5>
+                    <p class="card-text display-4">{{ total_messages }}</p>
+                    <a href="{{ url_for('admin.messages') }}" class="btn btn-light btn-sm mt-2">View All Messages</a>
+                </div>
+            </div>
+        </div>
+
     <div class="row mt-4">
         <div class="col-md-6">
             <h3>Recent Reports</h3>
