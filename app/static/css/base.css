@@ -1,0 +1,130 @@
+/* Base Styles */
+:root {
+    --navbar-height: 56px;
+    --footer-height: 60px;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--navbar-height);
+}
+
+/* Content Wrapper */
+.content-wrapper {
+    flex: 1;
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+/* Navigation */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+.nav-link {
+    padding: 0.5rem 1rem;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: rgba(255,255,255,0.9);
+}
+
+.nav-link.active {
+    font-weight: 600;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Alert Messages */
+.alert {
+    margin-bottom: 1rem;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Footer */
+.footer {
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    height: var(--footer-height);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 10px;
+    }
+
+    .navbar-nav {
+        padding: 0.5rem 0;
+    }
+
+    .nav-link {
+        padding: 0.5rem 0;
+    }
+
+    .dropdown-menu {
+        border: none;
+        background-color: transparent;
+        box-shadow: none;
+    }
+
+    .dropdown-item {
+        color: rgba(255,255,255,0.8);
+    }
+
+    .dropdown-item:hover {
+        background-color: transparent;
+        color: #fff;
+    }
+
+    .alert {
+        margin: 10px;
+    }
+}
+
+/* Utility Classes */
+.shadow-sm {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.shadow {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+}
+
+.shadow-lg {
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+}
+
+/* Icons */
+.fas {
+    width: 20px;
+    text-align: center;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-width: 0.2em;
+}

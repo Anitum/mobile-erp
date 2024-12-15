@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Admin Dashboard</h1>
+    
+    <div class="row">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Teachers</h5>
+                    <p class="card-text display-4">{{ teachers }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Students</h5>
+                    <p class="card-text display-4">{{ students }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Unread Messages</h5>
+                    <p class="card-text display-4">{{ unread_messages }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h3>Recent Reports</h3>
+            <div class="list-group">
+                {% for report in reports %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Report from {{ report.teacher_id }}</h5>
+                        <small>{{ report.date.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                    <p class="mb-1">{{ report.content[:100] }}...</p>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

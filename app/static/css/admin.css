@@ -1,0 +1,153 @@
+/* General Styles */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    --success-color: #2ecc71;
+    --warning-color: #f1c40f;
+    --danger-color: #e74c3c;
+    --light-gray: #f5f6fa;
+    --dark-gray: #2d3436;
+}
+
+body {
+    background-color: var(--light-gray);
+}
+
+/* Dashboard Cards */
+.stat-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card .card-body {
+    padding: 1.5rem;
+}
+
+.stat-card .card-title {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-card .display-4 {
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+/* Messages */
+.message-card {
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.message-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.message-card.unread {
+    border-left: 4px solid var(--accent-color);
+}
+
+/* Forms */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    border-color: var(--accent-color);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    transform: translateY(-1px);
+}
+
+/* File Upload */
+.file-upload-wrapper {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.file-upload-input {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 2.5rem;
+    margin: 0;
+    opacity: 0;
+}
+
+.file-upload-text {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1;
+    height: 2.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    color: #666;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .stat-card .display-4 {
+        font-size: 2rem;
+    }
+
+    .nav-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-tabs .nav-link {
+        white-space: nowrap;
+    }
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

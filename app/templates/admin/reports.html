@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Teacher Reports</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row">
+                <div class="col">
+                    <h5 class="mb-0">Filter Reports</h5>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Date Range</label>
+                    <input type="date" class="form-control" name="start_date">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">To</label>
+                    <input type="date" class="form-control" name="end_date">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <select class="form-control" name="status">
+                        <option value="">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="reviewed">Reviewed</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="reports-list">
+        {% for report in reports %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Report #{{ report.id }}</h5>
+                    <span class="badge {% if report.status == 'pending' %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ report.status }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    Submitted on {{ report.date.strftime('%Y-%m-%d %H:%M') }}
+                </h6>
+                <p class="card-text">{{ report.content }}</p>
+                {% if report.file_path %}
+                <a href="{{ url_for('static', filename='uploads/' + report.file_path) }}" 
+                   class="btn btn-sm btn-outline-primary" target="_blank">
+                    View Attachment
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-success btn-sm mark-reviewed" data-report-id="{{ report.id }}">
+                    Mark as Reviewed
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

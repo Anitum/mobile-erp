@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Welcome, {{ current_user.first_name }}!</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-check fa-3x mb-3"></i>
+                    <h5>Mark Attendance</h5>
+                    <a href="{{ url_for('teacher.attendance') }}" class="btn btn-primary mt-2">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-book fa-3x mb-3"></i>
+                    <h5>Assign Homework</h5>
+                    <a href="{{ url_for('teacher.homework') }}" class="btn btn-primary mt-2">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-3x mb-3"></i>
+                    <h5>Daily Report</h5>
+                    <a href="{{ url_for('teacher.daily_report') }}" class="btn btn-primary mt-2">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope fa-3x mb-3"></i>
+                    <h5>Messages</h5>
+                    <a href="{{ url_for('teacher.messages') }}" class="btn btn-primary mt-2">Go</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Assignments</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add recent assignments list here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Messages</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add recent messages list here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

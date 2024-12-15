@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Welcome, {{ current_user.first_name }}!</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Pending Homework</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_homework %}
+                        <div class="list-group">
+                            {% for hw in pending_homework %}
+                            <a href="{{ url_for('student.submit_homework', homework_id=hw.id) }}" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ hw.title }}</h6>
+                                    <small class="text-danger">Due: {{ hw.due_date.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                <small>{{ hw.subject }}</small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No pending homework!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Messages</h5>
+                </div>
+                <div class="card-body">
+                    {% if unread_messages > 0 %}
+                        <div class="alert alert-info">
+                            You have {{ unread_messages }} unread message(s)
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No new messages</p>
+                    {% endif %}
+                    <a href="{{ url_for('student.messages') }}" class="btn btn-outline-primary mt-3">
+                        View All Messages
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

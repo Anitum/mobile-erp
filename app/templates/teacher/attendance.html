@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">Mark Attendance</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="date" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Students</label>
+                    {% for student in students %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="students" value="{{ student.id }}" id="student{{ student.id }}">
+                        <label class="form-check-label" for="student{{ student.id }}">
+                            {{ student.first_name }} {{ student.last_name }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Attendance</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

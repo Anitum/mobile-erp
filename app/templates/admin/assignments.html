@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Assignments Management</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Create New Assignment</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-control" name="title" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-control" name="content" rows="4" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Deadline</label>
+                    <input type="datetime-local" class="form-control" name="deadline" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Assign To</label>
+                    <select class="form-control" name="assigned_to" required>
+                        <option value="all">All</option>
+                        <option value="teachers">Teachers Only</option>
+                        <option value="students">Students Only</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Attachment</label>
+                    <input type="file" class="form-control" name="file">
+                </div>
+                <button type="submit" class="btn btn-primary">Create Assignment</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="assignments-list">
+        <h3>Recent Assignments</h3>
+        {% for assignment in assignments %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ assignment.title }}</h5>
+                    <span class="badge bg-info">{{ assignment.assigned_to }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    Posted: {{ assignment.date_posted.strftime('%Y-%m-%d') }} | 
+                    Deadline: {{ assignment.deadline.strftime('%Y-%m-%d') }}
+                </h6>
+                <p class="card-text">{{ assignment.content }}</p>
+                {% if assignment.file_path %}
+                <a href="{{ url_for('static', filename='uploads/' + assignment.file_path) }}" 
+                   class="btn btn-sm btn-outline-primary" target="_blank">
+                    View Attachment
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Message List -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Messages</h5>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newMessageModal">
+                            <i class="fas fa-plus"></i> New Message
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for message in messages %}
+                        <a href="#" class="list-group-item list-group-item-action {% if not message.is_read %}unread{% endif %}"
+                           data-message-id="{{ message.id }}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ message.sender.username }}</h6>
+                                <small>{{ message.timestamp.strftime('%H:%M') }}</small>
+                            </div>
+                            <p class="mb-1 text-truncate">{{ message.subject }}</p>
+                            <small class="text-muted">{{ message.timestamp.strftime('%Y-%m-%d') }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Content -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body message-content">
+                    <!-- Selected message content will be displayed here -->
+                    <div class="text-center text-muted select-message">
+                        <i class="fas fa-envelope fa-3x mb-3"></i>
+                        <p>Select a message to read</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Message Modal -->
+<div class="modal fade" id="newMessageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" enctype="multipart/form-data" id="newMessageForm">
+                    <div class="mb-3">
+                        <label class="form-label">To</label>
+                        <select class="form-control" name="receiver_id" required>
+                            <option value="">Select Recipient</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }} ({{ user.role }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" name="subject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" name="content" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Attachments</label>
+                        <input type="file" class="form-control" name="attachments" multiple>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .unread {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+    .message-content {
+        min-height: 400px;
+    }
+    .select-message {
+        padding: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle message selection
+        const messageLinks = document.querySelectorAll('[data-message-id]');
+        messageLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const messageId = this.dataset.messageId;
+                loadMessage(messageId);
+            });
+        });
+
+        // Load message content
+        function loadMessage(messageId) {
+            fetch(`/teacher/message/${messageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.querySelector('.message-content');
+                    content.innerHTML = `
+                        <h4>${data.subject}</h4>
+                        <div class="message-meta">
+                            <small class="text-muted">
+                                From: ${data.sender} | 
+                                Date: ${data.timestamp}
+                            </small>
+                        </div>
+                        <hr>
+                        <div class="message-body">
+                            ${data.content}
+                        </div>
+                        ${data.attachments ? `
+                        <div class="message-attachments mt-3">
+                            <h6>Attachments:</h6>
+                            ${data.attachments.map(att => `
+                                <a href="${att.url}" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="fas fa-paperclip"></i> ${att.name}
+                                </a>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                    `;
+                });
+        }
+    });
+</script>
+{% endblock %}

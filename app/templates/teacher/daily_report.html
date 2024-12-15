@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">Daily Report</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Date -->
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="report_date" value="{{ today_date }}" required>
+                </div>
+
+                <!-- Cleanliness Rating -->
+                <div class="mb-4">
+                    <label class="form-label">Classroom Cleanliness Rating</label>
+                    <div class="rating-container">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="cleanliness" value="1" id="rating1" required>
+                            <label class="form-check-label" for="rating1">1</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="cleanliness" value="2" id="rating2">
+                            <label class="form-check-label" for="rating2">2</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="cleanliness" value="3" id="rating3">
+                            <label class="form-check-label" for="rating3">3</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="cleanliness" value="4" id="rating4">
+                            <label class="form-check-label" for="rating4">4</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="cleanliness" value="5" id="rating5">
+                            <label class="form-check-label" for="rating5">5</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks Completion -->
+                <div class="mb-4">
+                    <label class="form-label">Daily Tasks Completion</label>
+                    <div class="tasks-container">
+                        {% for task in daily_tasks %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="completed_tasks" value="{{ task.id }}" id="task{{ task.id }}">
+                            <label class="form-check-label" for="task{{ task.id }}">
+                                {{ task.description }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Report Content -->
+                <div class="mb-4">
+                    <label class="form-label">Detailed Report</label>
+                    <textarea class="form-control" name="report_content" rows="6" required 
+                              placeholder="Please provide details about today's activities, challenges, and achievements..."></textarea>
+                </div>
+
+                <!-- Attachments -->
+                <div class="mb-4">
+                    <label class="form-label">Attachments</label>
+                    <div class="input-group">
+                        <input type="file" class="form-control" name="attachments" multiple>
+                    </div>
+                    <small class="text-muted">You can upload multiple files (images, PDFs, documents)</small>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Submit Daily Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Previous Reports -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4 class="mb-0">Previous Reports</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Cleanliness Rating</th>
+                            <th>Tasks Completed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in previous_reports %}
+                        <tr>
+                            <td>{{ report.date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="stars">
+                                    {% for i in range(report.cleanliness_rating) %}
+                                    <i class="fas fa-star text-warning"></i>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>{{ report.completed_tasks|length }}/{{ total_tasks }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info view-report" data-report-id="{{ report.id }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report View Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Daily Report Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Report details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

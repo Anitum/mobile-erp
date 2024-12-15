@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Messages</h1>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">New Message</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">To</label>
+                            <select class="form-control" name="receiver_id" required>
+                                {% for user in users %}
+                                <option value="{{ user.id }}">
+                                    {{ user.username }} ({{ user.role }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <input type="text" class="form-control" name="subject" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" name="content" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Attachment</label>
+                            <input type="file" class="form-control" name="file">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <ul class="nav nav-tabs mb-3" id="messagesTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="inbox-tab" data-bs-toggle="tab" href="#inbox">
+                        Inbox
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="sent-tab" data-bs-toggle="tab" href="#sent">
+                        Sent
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="inbox">
+                    {% for message in received_messages %}
+                    <div class="card mb-2 {% if not message.is_read %}border-primary{% endif %}">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ message.subject }}</h6>
+                            <p class="card-text">{{ message.content }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    From: {{ message.sender_id }} | 
+                                    {{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                                {% if message.file_path %}
+                                <a href="{{ url_for('static', filename='uploads/' + message.file_path) }}" 
+                                   class="btn btn-sm btn-outline-primary" target="_blank">
+                                    View Attachment
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="tab-pane fade" id="sent">
+                    {% for message in sent_messages %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ message.subject }}</h6>
+                            <p class="card-text">{{ message.content }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    To: {{ message.receiver_id }} | 
+                                    {{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                                {% if message.file_path %}
+                                <a href="{{ url_for('static', filename='uploads/' + message.file_path) }}" 
+                                   class="btn btn-sm btn-outline-primary" target="_blank">
+                                    View Attachment
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

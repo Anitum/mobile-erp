@@ -1,0 +1,141 @@
+/* Teacher Dashboard Styles */
+.dashboard-card {
+    transition: transform 0.3s ease;
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+
+.dashboard-card i {
+    color: #3498db;
+}
+
+/* Attendance Styles */
+.attendance-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Homework Styles */
+.homework-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* Daily Report Styles */
+.rating-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tasks-container {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.stars {
+    color: #ffc107;
+}
+
+/* Messages Styles */
+.message-list {
+    height: 600px;
+    overflow-y: auto;
+}
+
+.unread {
+    border-left: 4px solid #3498db;
+}
+
+.message-content {
+    padding: 20px;
+}
+
+.message-meta {
+    margin: 10px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .card {
+        margin-bottom: 15px;
+    }
+
+    .dashboard-card {
+        margin-bottom: 15px;
+    }
+
+    .message-list {
+        height: 300px;
+    }
+
+    .rating-container {
+        flex-wrap: wrap;
+    }
+}
+
+/* Form Elements */
+.form-control {
+    border-radius: 8px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    border-color: #3498db;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    padding: 8px 16px;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
