@@ -41,21 +41,6 @@
                     </div>
                 </div>
 
-                <!-- Tasks Completion -->
-                <div class="mb-4">
-                    <label class="form-label">Daily Tasks Completion</label>
-                    <div class="tasks-container">
-                        {% for task in daily_tasks %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="completed_tasks" value="{{ task.id }}" id="task{{ task.id }}">
-                            <label class="form-check-label" for="task{{ task.id }}">
-                                {{ task.description }}
-                            </label>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
                 <!-- Report Content -->
                 <div class="mb-4">
                     <label class="form-label">Detailed Report</label>
@@ -67,9 +52,9 @@
                 <div class="mb-4">
                     <label class="form-label">Attachments</label>
                     <div class="input-group">
-                        <input type="file" class="form-control" name="attachments" multiple>
+                        <input type="file" class="form-control" name="attachments">
                     </div>
-                    <small class="text-muted">You can upload multiple files (images, PDFs, documents)</small>
+                    <small class="text-muted">You can upload files (images, PDFs, documents)</small>
                 </div>
 
                 <!-- Submit Button -->
@@ -91,8 +76,8 @@
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Cleanliness Rating</th>
-                            <th>Tasks Completed</th>
+                            <th>Content</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -100,18 +85,18 @@
                         {% for report in previous_reports %}
                         <tr>
                             <td>{{ report.date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ report.content[:50] }}...</td>
+                            <td>{{ report.status }}</td>
                             <td>
-                                <div class="stars">
-                                    {% for i in range(report.cleanliness_rating) %}
-                                    <i class="fas fa-star text-warning"></i>
-                                    {% endfor %}
-                                </div>
-                            </td>
-                            <td>{{ report.completed_tasks|length }}/{{ total_tasks }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-info view-report" data-report-id="{{ report.id }}">
+                                <button class="btn btn-sm btn-info" onclick="viewReport({{ report.id }})">
                                     <i class="fas fa-eye"></i> View
                                 </button>
+                                {% if report.file_path %}
+                                <a href="{{ url_for('static', filename=report.file_path) }}" 
+                                   class="btn btn-sm btn-secondary" target="_blank">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -136,4 +121,14 @@
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewReport(reportId) {
+    // Add functionality to view report details in modal
+    $('#reportModal').modal('show');
+}
+</script>
 {% endblock %}

@@ -230,3 +230,14 @@ def mark_attendance():
     db.session.commit()
     flash('Attendance marked successfully', 'success')
     return redirect(url_for('admin.view_attendance'))
+
+
+# In admin.py
+@admin.route('/all_attendance')
+@login_required
+@admin_required
+def all_attendance():
+    # Add your attendance viewing logic here
+    attendances = Attendance.query.order_by(Attendance.date.desc()).all()
+    return render_template('admin/all_attendance.html', attendances=attendances)
+

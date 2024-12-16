@@ -6,5 +6,6 @@ class DailyReport(db.Model):
     teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     content = db.Column(db.Text, nullable=False)
+    cleanliness_rating = db.Column(db.Integer)  # Add this line
     file_path = db.Column(db.String(255))
     status = db.Column(db.String(20), default='pending')  # pending, reviewed

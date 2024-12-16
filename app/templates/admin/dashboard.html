@@ -11,7 +11,6 @@
                 <div class="card-body">
                     <h5 class="card-title">Teachers Present Today</h5>
                     <p class="card-text display-4">{{ teachers_present }}/{{ total_teachers }}</p>
-                    <a href="{{ url_for('admin.user_attendance') }}" class="btn btn-light btn-sm">View Details</a>
                 </div>
             </div>
         </div>
@@ -21,7 +20,6 @@
                 <div class="card-body">
                     <h5 class="card-title">Students Present Today</h5>
                     <p class="card-text display-4">{{ students_present }}/{{ total_students }}</p>
-                    <a href="{{ url_for('admin.student_attendance') }}" class="btn btn-light btn-sm">View Details</a>
                 </div>
             </div>
         </div>
@@ -53,7 +51,6 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Today's Teacher Attendance</h5>
-                    <a href="{{ url_for('admin.teacher_attendance') }}" class="btn btn-primary btn-sm">Full Report</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -118,17 +115,15 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <a href="{{ url_for('admin.create_assignment') }}" class="btn btn-primary btn-lg w-100 mb-3">
+                            <a href="{{ url_for('admin.assignments') }}" class="btn btn-primary btn-lg w-100 mb-3">
                                 <i class="fas fa-tasks me-2"></i>Create Assignment
                             </a>
                         </div>
                         <div class="col-md-4">
-                            <a href="{{ url_for('admin.send_announcement') }}" class="btn btn-success btn-lg w-100 mb-3">
                                 <i class="fas fa-bullhorn me-2"></i>Send Announcement
                             </a>
                         </div>
                         <div class="col-md-4">
-                            <a href="{{ url_for('admin.attendance_report') }}" class="btn btn-info btn-lg w-100 mb-3">
                                 <i class="fas fa-chart-bar me-2"></i>Attendance Report
                             </a>
                         </div>
@@ -167,41 +162,4 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Weekly Attendance Chart
-const weeklyCtx = document.getElementById('weeklyAttendanceChart').getContext('2d');
-new Chart(weeklyCtx, {
-    type: 'line',
-    data: {
-        labels: {{ weekly_labels | tojson }},
-        datasets: [{
-            label: 'Teachers',
-            data: {{ teacher_weekly_data | tojson }},
-            borderColor: 'rgb(75, 192, 192)',
-            tension: 0.1
-        }, {
-            label: 'Students',
-            data: {{ student_weekly_data | tojson }},
-            borderColor: 'rgb(255, 99, 132)',
-            tension: 0.1
-        }]
-    }
-});
-
-// Monthly Attendance Chart
-const monthlyCtx = document.getElementById('monthlyAttendanceChart').getContext('2d');
-new Chart(monthlyCtx, {
-    type: 'bar',
-    data: {
-        labels: {{ monthly_labels | tojson }},
-        datasets: [{
-            label: 'Average Attendance',
-            data: {{ monthly_attendance_data | tojson }},
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgb(54, 162, 235)',
-            borderWidth: 1
-        }]
-    }
-});
-</script>
 {% endblock %}
