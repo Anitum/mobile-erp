@@ -19,6 +19,9 @@
         {% elif current_user.role == 'student' %}
             <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
         {% endif %}
+        {% if request.endpoint.startswith('admin.view_attendance') %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/attendance.css') }}">
+        {% endif %}
     {% endif %}
     {% block styles %}{% endblock %}
 </head>
@@ -61,7 +64,13 @@
                                    href="{{ url_for('admin.messages') }}">
                                     <i class="fas fa-envelope me-1"></i>Messages
                                 </a>
+                            <li class="nav-item">
+                               <a class="nav-link {% if request.endpoint == 'admin.view_attendance' %}active{% endif %}" 
+                               href="{{ url_for('admin.view_attendance') }}">
+                                <i class="fas fa-user-check me-1"></i>Attendance
+                                </a>
                             </li>
+                                </li>
                         </ul>
 
                     {% elif current_user.role == 'teacher' %}
@@ -199,5 +208,8 @@
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
     {% block scripts %}{% endblock %}
+    {% if request.endpoint.startswith('admin.view_attendance') %}
+        <script src="{{ url_for('static', filename='js/attendance.js') }}"></script>
+    {% endif %}
 </body>
 </html>

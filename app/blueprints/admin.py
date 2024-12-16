@@ -24,17 +24,28 @@ def admin_required(f):
 @login_required
 @admin_required
 def dashboard():
+    today = datetime.now().date()
+    
+    # Basic stats
     reports = DailyReport.query.order_by(DailyReport.date.desc()).limit(5).all()
     unread_messages = Message.query.filter_by(receiver_id=current_user.id, is_read=False).count()
     total_messages = Message.query.count()
     teachers = User.query.filter_by(role='teacher').count()
     students = User.query.filter_by(role='student').count()
-    return render_template('admin/dashboard.html', 
-                         reports=reports, 
+    
+    # Attendance stats
+    teachers_present = 0
+    
+    students_present = 0
+    
+    return render_template('admin/dashboard.html',
+                         reports=reports,
                          unread_messages=unread_messages,
                          total_messages=total_messages,
                          teachers=teachers,
-                         students=students)
+                         students=students,
+                         teachers_present=teachers_present,
+                         students_present=students_present)
 
 @admin.route('/admin/reports')
 @login_required
@@ -112,3 +123,110 @@ def messages():
                          received_messages=received_messages,
                          sent_messages=sent_messages,
                          users=users)
+
+
+from datetime import datetime, timedelta
+from app.models.attendance import Attendance
+from app.models.user import User
+
+@admin.route('/admin/attendance')
+@login_required
+@admin_required
+def view_attendance():
+    # Get filter parameters
+    date = request.args.get('date', datetime.now().date())
+    if isinstance(date, str):
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+    role = request.args.get('role', 'all')
+    
+    # Get attendance records
+    attendance_records = Attendance.get_attendance_by_date(date, role)
+    
+    # Get all users for comparison
+    users_query = User.query.filter_by(is_active=True)
+    if role != 'all':
+        users_query = users_query.filter_by(role=role)
+    users = users_query.all()
+    
+    # Calculate statistics
+    total_users = len(users)
+    present_users = len([a for a in attendance_records if a.status == 'present'])
+    absent_users = len([a for a in attendance_records if a.status == 'absent'])
+    late_users = len([a for a in attendance_records if a.status == 'late'])
+    
+    return render_template('admin/attendance.html',
+                         date=date,
+                         role=role,
+                         attendance_records=attendance_records,
+                         users=users,
+                         stats={
+                             'total': total_users,
+                             'present': present_users,
+                             'absent': absent_users,
+                             'late': late_users
+                         })
+
+@admin.route('/admin/attendance/user/<int:user_id>')
+@login_required
+@admin_required
+def user_attendance(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Get date range
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=30)  # Last 30 days by default
+    
+    attendance_records = Attendance.get_user_attendance(user_id, start_date, end_date)
+    
+    # Calculate statistics
+    total_days = (end_date - start_date).days + 1
+    present_days = len([a for a in attendance_records if a.status == 'present'])
+    absent_days = len([a for a in attendance_records if a.status == 'absent'])
+    late_days = len([a for a in attendance_records if a.status == 'late'])
+    
+    return render_template('admin/user_attendance.html',
+                         user=user,
+                         attendance_records=attendance_records,
+                         start_date=start_date,
+                         end_date=end_date,
+                         stats={
+                             'total_days': total_days,
+                             'present_days': present_days,
+                             'absent_days': absent_days,
+                             'late_days': late_days
+                         })
+
+@admin.route('/admin/attendance/mark', methods=['POST'])
+@login_required
+@admin_required
+def mark_attendance():
+    user_id = request.form.get('user_id')
+    date = request.form.get('date')
+    status = request.form.get('status')
+    remarks = request.form.get('remarks')
+    
+    if not all([user_id, date, status]):
+        flash('Missing required fields', 'danger')
+        return redirect(url_for('admin.view_attendance'))
+    
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+    
+    # Check if attendance already exists
+    attendance = Attendance.query.filter_by(user_id=user_id, date=date).first()
+    if attendance:
+        attendance.status = status
+        attendance.remarks = remarks
+        attendance.recorded_by = current_user.id
+    else:
+        attendance = Attendance(
+            user_id=user_id,
+            date=date,
+            status=status,
+            remarks=remarks,
+            recorded_by=current_user.id
+        )
+        db.session.add(attendance)
+    
+    db.session.commit()
+    flash('Attendance marked successfully', 'success')
+    return redirect(url_for('admin.view_attendance'))

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Attendance Management</h1>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="date" 
+                           value="{{ date.strftime('%Y-%m-%d') }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Role</label>
+                    <select class="form-control" name="role">
+                        <option value="all" {% if role == 'all' %}selected{% endif %}>All</option>
+                        <option value="teacher" {% if role == 'teacher' %}selected{% endif %}>Teachers</option>
+                        <option value="student" {% if role == 'student' %}selected{% endif %}>Students</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total</h5>
+                    <p class="card-text display-4">{{ stats.total }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Present</h5>
+                    <p class="card-text display-4">{{ stats.present }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Absent</h5>
+                    <p class="card-text display-4">{{ stats.absent }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Late</h5>
+                    <p class="card-text display-4">{{ stats.late }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        {% set attendance = attendance_records|selectattr('user_id', 'equalto', user.id)|first %}
+                        <tr>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                            <td>{{ user.role }}</td>
+                            <td>
+                                {% if attendance %}
+                                    <span class="badge bg-{{ {
+                                        'present': 'success',
+                                        'absent': 'danger',
+                                        'late': 'warning'
+                                    }[attendance.status] }}">
+                                        {{ attendance.status }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not marked</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ attendance.check_in_time.strftime('%H:%M') if attendance and attendance.check_in_time else '-' }}</td>
+                            <td>{{ attendance.check_out_time.strftime('%H:%M') if attendance and attendance.check_out_time else '-' }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#markAttendanceModal"
+                                        data-user-id="{{ user.id }}"
+                                        data-user-name="{{ user.first_name }} {{ user.last_name }}">
+                                    Mark Attendance
+                                </button>
+                                <a href="{{ url_for('admin.user_attendance', user_id=user.id) }}" 
+                                   class="btn btn-sm btn-info">History</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mark Attendance Modal -->
+<div class="modal fade" id="markAttendanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin.mark_attendance') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mark Attendance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="user_id" id="modalUserId">
+                    <input type="hidden" name="date" value="{{ date.strftime('%Y-%m-%d') }}">
+                    
+                    <p>Marking attendance for: <span id="modalUserName"></span></p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" name="status" required>
+                            <option value="present">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late">Late</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control" name="remarks" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('markAttendanceModal').addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget;
+    var userId = button.getAttribute('data-user-id');
+    var userName = button.getAttribute('data-user-name');
+    
+    document.getElementById('modalUserId').value = userId;
+    document.getElementById('modalUserName').textContent = userName;
+});
+</script>
+{% endblock %}

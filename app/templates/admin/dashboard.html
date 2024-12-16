@@ -4,12 +4,14 @@
 <div class="container">
     <h1 class="mb-4">Admin Dashboard</h1>
     
-    <div class="row">
+    <!-- Quick Stats Cards -->
+    <div class="row mb-4">
         <div class="col-md-3 col-sm-6 mb-3">
             <div class="card text-white bg-primary">
                 <div class="card-body">
-                    <h5 class="card-title">Teachers</h5>
-                    <p class="card-text display-4">{{ teachers }}</p>
+                    <h5 class="card-title">Teachers Present Today</h5>
+                    <p class="card-text display-4">{{ teachers_present }}/{{ total_teachers }}</p>
+                    <a href="{{ url_for('admin.user_attendance') }}" class="btn btn-light btn-sm">View Details</a>
                 </div>
             </div>
         </div>
@@ -17,8 +19,9 @@
         <div class="col-md-3 col-sm-6 mb-3">
             <div class="card text-white bg-success">
                 <div class="card-body">
-                    <h5 class="card-title">Students</h5>
-                    <p class="card-text display-4">{{ students }}</p>
+                    <h5 class="card-title">Students Present Today</h5>
+                    <p class="card-text display-4">{{ students_present }}/{{ total_students }}</p>
+                    <a href="{{ url_for('admin.student_attendance') }}" class="btn btn-light btn-sm">View Details</a>
                 </div>
             </div>
         </div>
@@ -26,38 +29,179 @@
         <div class="col-md-3 col-sm-6 mb-3">
             <div class="card text-white bg-warning">
                 <div class="card-body">
-                    <h5 class="card-title">Unread Messages</h5>
-                    <p class="card-text display-4">{{ unread_messages }}</p>
+                    <h5 class="card-title">Unread Reports</h5>
+                    <p class="card-text display-4">{{ unread_reports }}</p>
+                    <a href="{{ url_for('admin.view_reports') }}" class="btn btn-light btn-sm">View Reports</a>
                 </div>
             </div>
         </div>
-    </div>
 
         <div class="col-md-3 col-sm-6 mb-3">
             <div class="card text-white bg-info">
                 <div class="card-body">
-                    <h5 class="card-title">Total Messages</h5>
-                    <p class="card-text display-4">{{ total_messages }}</p>
-                    <a href="{{ url_for('admin.messages') }}" class="btn btn-light btn-sm mt-2">View All Messages</a>
+                    <h5 class="card-title">Unread Messages</h5>
+                    <p class="card-text display-4">{{ unread_messages }}</p>
+                    <a href="{{ url_for('admin.messages') }}" class="btn btn-light btn-sm">View Messages</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Attendance Today -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Today's Teacher Attendance</h5>
+                    <a href="{{ url_for('admin.teacher_attendance') }}" class="btn btn-primary btn-sm">Full Report</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Teacher</th>
+                                    <th>Check-in Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attendance in teacher_attendance %}
+                                <tr>
+                                    <td>{{ attendance.teacher_name }}</td>
+                                    <td>{{ attendance.check_in_time.strftime('%H:%M') }}</td>
+                                    <td>
+                                        <span class="badge {% if attendance.is_late %}bg-warning{% else %}bg-success{% endif %}">
+                                            {% if attendance.is_late %}Late{% else %}On Time{% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-    <div class="row mt-4">
+        <!-- Recent Reports -->
         <div class="col-md-6">
-            <h3>Recent Reports</h3>
-            <div class="list-group">
-                {% for report in reports %}
-                <a href="#" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">Report from {{ report.teacher_id }}</h5>
-                        <small>{{ report.date.strftime('%Y-%m-%d') }}</small>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Unread Reports</h5>
+                    <a href="{{ url_for('admin.view_reports') }}" class="btn btn-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for report in unread_reports_list %}
+                        <a href="{{ url_for('admin.view_report', report_id=report.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ report.teacher_name }}</h6>
+                                <small>{{ report.date.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">{{ report.content[:100] }}...</p>
+                        </a>
+                        {% endfor %}
                     </div>
-                    <p class="mb-1">{{ report.content[:100] }}...</p>
-                </a>
-                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.create_assignment') }}" class="btn btn-primary btn-lg w-100 mb-3">
+                                <i class="fas fa-tasks me-2"></i>Create Assignment
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.send_announcement') }}" class="btn btn-success btn-lg w-100 mb-3">
+                                <i class="fas fa-bullhorn me-2"></i>Send Announcement
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.attendance_report') }}" class="btn btn-info btn-lg w-100 mb-3">
+                                <i class="fas fa-chart-bar me-2"></i>Attendance Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Charts -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Weekly Attendance Overview</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="weeklyAttendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Monthly Attendance Trends</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyAttendanceChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Weekly Attendance Chart
+const weeklyCtx = document.getElementById('weeklyAttendanceChart').getContext('2d');
+new Chart(weeklyCtx, {
+    type: 'line',
+    data: {
+        labels: {{ weekly_labels | tojson }},
+        datasets: [{
+            label: 'Teachers',
+            data: {{ teacher_weekly_data | tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }, {
+            label: 'Students',
+            data: {{ student_weekly_data | tojson }},
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.1
+        }]
+    }
+});
+
+// Monthly Attendance Chart
+const monthlyCtx = document.getElementById('monthlyAttendanceChart').getContext('2d');
+new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ monthly_labels | tojson }},
+        datasets: [{
+            label: 'Average Attendance',
+            data: {{ monthly_attendance_data | tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgb(54, 162, 235)',
+            borderWidth: 1
+        }]
+    }
+});
+</script>
 {% endblock %}

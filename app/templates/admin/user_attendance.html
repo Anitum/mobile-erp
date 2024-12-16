@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Attendance History - {{ user.first_name }} {{ user.last_name }}</h1>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Days</h5>
+                    <p class="card-text display-4">{{ stats.total_days }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Present Days</h5>
+                    <p class="card-text display-4">{{ stats.present_days }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Absent Days</h5>
+                    <p class="card-text display-4">{{ stats.absent_days }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Late Days</h5>
+                    <p class="card-text display-4">{{ stats.late_days }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance History -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Remarks</th>
+                            <th>Recorded By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_records %}
+                        <tr>
+                            <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <span class="badge bg-{{ {
+                                    'present': 'success',
+                                    'absent': 'danger',
+                                    'late': 'warning'
+                                }[record.status] }}">
+                                    {{ record.status }}
+                                </span>
+                            </td>
+                            <td>{{ record.check_in_time.strftime('%H:%M') if record.check_in_time else '-' }}</td>
+<td>{{ record.check_out_time.strftime('%H:%M') if record.check_out_time else '-' }}</td>
+                            <td>{{ record.remarks or '-' }}</td>
+                            <td>{{ record.recorder.first_name }} {{ record.recorder.last_name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Chart -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Attendance Overview</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="attendanceChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Present', 'Absent', 'Late'],
+            datasets: [{
+                data: [
+                    {{ stats.present_days }},
+                    {{ stats.absent_days }},
+                    {{ stats.late_days }}
+                ],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',  // success
+                    'rgba(220, 53, 69, 0.8)',  // danger
+                    'rgba(255, 193, 7, 0.8)'   // warning
+                ],
+                borderColor: [
+                    'rgb(40, 167, 69)',
+                    'rgb(220, 53, 69)',
+                    'rgb(255, 193, 7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
