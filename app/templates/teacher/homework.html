@@ -48,18 +48,21 @@
         <div class="card-header">
             <h3 class="mb-0">Assigned Homework</h3>
         </div>
-        <div class="card-body" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-body" >
             {% for homework in assigned_homework %}
-            <div class="mb-3">
-                <h5>{{ homework.title }}</h5>
-                <p style="max-width: 70%;">{{ homework.description }}</p>
-                <p>Due Date: {{ homework.due_date.strftime('%Y-%m-%d %H:%M') }}</p>
-            </div>
-            <div class="mb-3">
-                <a href="{{ url_for('static', filename=homework.file_path) }}" 
-                   class="btn btn-sm btn-secondary" target="_blank">
-                    <i class="fas fa-download"></i> Download
-                </a>
+            <div class="mb-3" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="mb-3">
+                    <h5>{{ homework.title }}</h5>
+                    <p style="max-width: 70%;">{{ homework.description }}</p>
+                    <p>Due Date: {{ homework.due_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+                <div class="mb-3" style="display: flex; flex-direction:column">
+                    <a href="{{ url_for('static', filename=homework.file_path) }}" style="display: flex; align-items: center; justify-content: space-between;" 
+                       class="btn btn-sm btn-secondary" target="_blank">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>
+
             </div>
             {% endfor %}
         </div>

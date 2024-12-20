@@ -8,6 +8,11 @@ from werkzeug.utils import secure_filename
 import os
 from functools import wraps
 from app.models.homework import SubjectEnum
+
+
+from app.models.report import DailyReport  # Import the DailyReport model
+from datetime import datetime
+
 teacher = Blueprint('teacher', __name__)
 
 def teacher_required(f):
@@ -142,6 +147,8 @@ def homework():
                 file = request.files['file']
                 if file and file.filename:
                     filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
                     file_path = os.path.join('uploads', filename)
                     full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                     file.save(full_path)
@@ -173,8 +180,6 @@ def homework():
     
     return render_template('teacher/homework.html', assigned_homework=assigned_homework, subjects=SubjectEnum)
 
-from app.models.report import DailyReport  # Import the DailyReport model
-from datetime import datetime
 
 @teacher.route('/teacher/daily-report', methods=['GET', 'POST'])
 @login_required
@@ -198,6 +203,8 @@ def daily_report():
                 file = request.files['attachments']
                 if file and file.filename:
                     filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
                     file_path = os.path.join('uploads', filename)
                     full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                     print(f"Saving file to: {full_path}")  # Debug print
