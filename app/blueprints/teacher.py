@@ -1,11 +1,17 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from app.models.user import User
+from app.models.homework import Homework
 from app import db
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
 from functools import wraps
+from app.models.homework import SubjectEnum
+
+
+from app.models.report import DailyReport  # Import the DailyReport model
+from datetime import datetime
 
 teacher = Blueprint('teacher', __name__)
 
@@ -113,23 +119,67 @@ def attendance():
 @teacher_required
 def homework():
     if request.method == 'POST':
-        title = request.form.get('title')
-        description = request.form.get('description')
-        due_date = request.form.get('due_date')
-        file = request.files.get('file')
-        
-        if file:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-        
-        # Save homework logic here
-        flash('Homework assigned successfully!', 'success')
-        return redirect(url_for('teacher.homework'))
-    
-    return render_template('teacher/homework.html')
+        try:
+            title = request.form.get('title')
+            description = request.form.get('description')
+            due_date = request.form.get('due_date')
+            subject = request.form.get('subject')
 
-from app.models.report import DailyReport  # Import the DailyReport model
-from datetime import datetime
+                        # Validate subject is in enum
+            if subject not in [s.value for s in SubjectEnum]:
+                flash('Invalid subject selected', 'danger')
+                return redirect(url_for('teacher.homework'))
+
+            # Validate required fields
+            if not all([title, description, due_date]):
+                flash('Please fill in all required fields', 'danger')
+                return redirect(url_for('teacher.homework'))
+
+            # Convert due_date string to datetime (now handling datetime-local format)
+            try:
+                due_date = datetime.strptime(due_date, '%Y-%m-%dT%H:%M')  # Changed format to match datetime-local
+            except ValueError:
+                flash('Invalid date format', 'danger')
+                return redirect(url_for('teacher.homework'))
+
+            file_path = None
+            if 'file' in request.files:  # Changed to match template's file input name
+                file = request.files['file']
+                if file and file.filename:
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
+                    file_path = os.path.join('uploads', filename)
+                    full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                    file.save(full_path)
+        
+            new_homework = Homework(
+                title=title,
+                description=description,
+                due_date=due_date,
+                teacher_id=current_user.id,
+                file_path=file_path,
+                subject=subject
+            )
+
+            db.session.add(new_homework)
+            db.session.commit()
+            
+            flash('Homework assigned successfully!', 'success')
+            return redirect(url_for('teacher.homework'))
+      
+        except Exception as e:
+            db.session.rollback()
+            flash('Error assigning homework. Please try again.', 'danger')
+            print(f"Error occurred: {str(e)}")  # Keep for debugging
+            return redirect(url_for('teacher.homework'))
+    
+    assigned_homework = Homework.query.filter_by(
+    teacher_id=current_user.id
+    ).order_by(Homework.due_date.desc()).all()
+    
+    return render_template('teacher/homework.html', assigned_homework=assigned_homework, subjects=SubjectEnum)
+
 
 @teacher.route('/teacher/daily-report', methods=['GET', 'POST'])
 @login_required
@@ -153,6 +203,8 @@ def daily_report():
                 file = request.files['attachments']
                 if file and file.filename:
                     filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
                     file_path = os.path.join('uploads', filename)
                     full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                     print(f"Saving file to: {full_path}")  # Debug print
