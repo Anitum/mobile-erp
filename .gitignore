@@ -28,6 +28,16 @@ ENV/
 .env
 .venv
 env/
+mobile_erp_venv
+
+# Test related ignores
+tests/uploads/*
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+test-results/
+
 
 # Flask
 instance/
