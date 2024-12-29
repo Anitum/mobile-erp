@@ -52,11 +52,9 @@ jobs:
         scp -r ./* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/app/
         ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
           cd /home/${{ secrets.EC2_USERNAME }}/app
-          sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv
-          python3 -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
-          # Restart your application (assuming you're using systemd)
-          sudo systemctl restart your-app-service
+          sudo systemctl restart caddy
+          sudo systemctl restart flask-app
+          # Add any other restart commands for your application
         '
