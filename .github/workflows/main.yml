@@ -78,4 +78,5 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
           # Restart application
-          sudo systemctl restart my-flask-app
+          sudo systemctl restart flask-app
+          sudo systemctl restart caddy
