@@ -51,6 +51,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    timeout-minutes: 15  # Add overall job timeout
     
     steps:
     - uses: actions/checkout@v3
@@ -67,16 +68,32 @@ jobs:
       run: |
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
     
-    - name: Deploy to EC2
+    - name: Prepare EC2 environment
+      timeout-minutes: 5
       run: |
-        scp -r ./* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/app/
+        ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-venv --no-install-recommends'
+    
+    - name: Transfer files
+      timeout-minutes: 3
+      run: |
+        # Exclude unnecessary files
+        rsync -azh --exclude 'venv' --exclude '.git' --exclude '__pycache__' \
+          ./* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/app/
+    
+    - name: Setup Python environment
+      timeout-minutes: 3
+      run: |
         ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
           cd /home/${{ secrets.EC2_USERNAME }}/app
-          sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv
           python3 -m venv venv
           source venv/bin/activate
-          pip install -r requirements.txt
-          # Restart application
+          pip install --no-cache-dir -r requirements.txt'
+    
+    - name: Restart services
+      timeout-minutes: 2
+      run: |
+        ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
           sudo systemctl restart flask-app
-          sudo systemctl restart caddy
+          sudo systemctl restart caddy'
