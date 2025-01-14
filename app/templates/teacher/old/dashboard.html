@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Welcome, {{ current_user.first_name }}!</h1>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Quick Actions -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100 shadow-sm transition-card">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <i class="fas fa-user-check fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title mb-3">Mark Attendance</h5>
+                    <a href="{{ url_for('teacher.attendance') }}" class="btn btn-primary mt-auto w-100">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100 shadow-sm transition-card">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <i class="fas fa-book fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title mb-3">Assign Homework</h5>
+                    <a href="{{ url_for('teacher.homework') }}" class="btn btn-primary mt-auto w-100">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100 shadow-sm transition-card">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <i class="fas fa-file-alt fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title mb-3">Daily Report</h5>
+                    <a href="{{ url_for('teacher.daily_report') }}" class="btn btn-primary mt-auto w-100">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100 shadow-sm transition-card">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <i class="fas fa-envelope fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title mb-3">Messages</h5>
+                    <a href="{{ url_for('teacher.messages') }}" class="btn btn-primary mt-auto w-100">Go</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Assignments</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add recent assignments list here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Messages</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add recent messages list here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.transition-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.transition-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.dashboard-card .card-body {
+    min-height: 200px;
+    text-align: center;
+    padding: 1.5rem !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboard-card .fa-3x {
+    transition: transform 0.2s ease-in-out;
+    display: block;
+    width: 100%;
+}
+
+.dashboard-card:hover .fa-3x {
+    transform: scale(1.1);
+}
+
+.card-title {
+    width: 100%;
+    text-align: center;
+}
+</style>
+{% endblock %}

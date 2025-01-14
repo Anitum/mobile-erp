@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Message -->
+    <div class="row mb-4 mt-3">
+        <div class="col-12">
+            <h1>Welcome, {{ current_user.first_name }}!</h1>
+        </div>
+    </div>
+
+    <!-- Top Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Today's Date</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="currentDate">
+                                {{ today_date.strftime('%B %d, %Y') }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Current Time</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="currentTime">
+                                Loading...
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Attendance Status</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if today_attendance and today_attendance.check_in_time %}
+                                    <span class="text-success">Checked In</span>
+                                {% else %}
+                                    <span class="text-warning">Not Checked In</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Working Hours</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="workingHours">
+                                {% if today_attendance and today_attendance.check_in_time %}
+                                    {% if today_attendance.check_out_time %}
+                                        {{ ((today_attendance.check_out_time - today_attendance.check_in_time).total_seconds() / 3600)|round(2) }} hrs
+                                    {% else %}
+                                        In Progress
+                                    {% endif %}
+                                {% else %}
+                                    Not Started
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100 shadow-sm transition-card">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <i class="fas fa-user-check fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title mb-3">Mark Attendance</h5>
+                    <a href="{{ url_for('teacher.attendance') }}" class="btn btn-primary mt-auto w-100">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100 shadow-sm transition-card">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <i class="fas fa-book fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title mb-3">Assign Homework</h5>
+                    <a href="{{ url_for('teacher.homework') }}" class="btn btn-primary mt-auto w-100">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100 shadow-sm transition-card">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <i class="fas fa-file-alt fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title mb-3">Daily Report</h5>
+                    <a href="{{ url_for('teacher.daily_report') }}" class="btn btn-primary mt-auto w-100">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100 shadow-sm transition-card">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <i class="fas fa-envelope fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title mb-3">Messages</h5>
+                    <a href="{{ url_for('teacher.messages') }}" class="btn btn-primary mt-auto w-100">Go</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Management Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Attendance Management</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                            aria-labelledby="dropdownMenuLink">
+                            <a class="dropdown-item" href="#">View History</a>
+                            <a class="dropdown-item" href="#">Download Report</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Check-in Section -->
+                        <div class="col-md-6 border-right">
+                            <div class="text-center mb-4">
+                                <h4 class="text-primary">Check In</h4>
+                                {% if today_attendance and today_attendance.check_in_time %}
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Checked in at {{ today_attendance.check_in_time.strftime('%I:%M %p') }}
+                                        <br>
+                                        <small>Location: {{ today_attendance.check_in_location or 'Not recorded' }}</small>
+                                    </div>
+                                {% else %}
+                                    <button id="checkInBtn" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-sign-in-alt mr-2"></i>Mark Check In
+                                    </button>
+                                    <div id="checkInSpinner" class="spinner-border text-primary d-none" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Check-out Section -->
+                        <div class="col-md-6">
+                            <div class="text-center mb-4">
+                                <h4 class="text-primary">Check Out</h4>
+                                {% if today_attendance and today_attendance.check_out_time %}
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Checked out at {{ today_attendance.check_out_time.strftime('%I:%M %p') }}
+                                        <br>
+                                        <small>Location: {{ today_attendance.check_out_location or 'Not recorded' }}</small>
+                                    </div>
+                                {% elif today_attendance and today_attendance.check_in_time %}
+                                    <button id="checkOutBtn" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Mark Check Out
+                                    </button>
+                                    <div id="checkOutSpinner" class="spinner-border text-primary d-none" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-warning">
+                                        Please check in first
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Map -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div id="locationMap" style="height: 300px; width: 100%;">
+                                <!-- Map will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities Section -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Assignments</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add recent assignments list here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Messages</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add recent messages list here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance History -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Attendance History</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="attendanceTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                    <th>Working Hours</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in attendance_history %}
+                                <tr>
+                                    <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ record.check_in_time.strftime('%I:%M %p') if record.check_in_time else 'N/A' }}</td>
+                                    <td>{{ record.check_out_time.strftime('%I:%M %p') if record.check_out_time else 'N/A' }}</td>
+                                    <td>
+                                        {% if record.check_in_time and record.check_out_time %}
+                                            {{ ((record.check_out_time - record.check_in_time).total_seconds() / 3600)|round(2) }} hrs
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ record.status|lower }}">
+                                            {{ record.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+<style>
+.border-left-primary {
+    border-left: .25rem solid #4e73df!important;
+}
+.border-left-success {
+    border-left: .25rem solid #1cc88a!important;
+}
+.border-left-info {
+    border-left: .25rem solid #36b9cc!important;
+}
+.border-left-warning {
+    border-left: .25rem solid #f6c23e!important;
+}
+.badge-present {
+    background-color: #1cc88a;
+    color: white;
+}
+.badge-absent {
+    background-color: #e74a3b;
+    color: white;
+}
+.badge-late {
+    background-color: #f6c23e;
+    color: white;
+}
+
+.transition-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.transition-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.dashboard-card .card-body {
+    min-height: 200px;
+    text-align: center;
+    padding: 1.5rem !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboard-card .fa-3x {
+    transition: transform 0.2s ease-in-out;
+    display: block;
+    width: 100%;
+}
+
+.dashboard-card:hover .fa-3x {
+    transform: scale(1.1);
+}
+
+.card-title {
+    width: 100%;
+    text-align: center;
+}
+</style>
+{% endblock %}

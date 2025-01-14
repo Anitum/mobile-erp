@@ -24,11 +24,45 @@ def teacher_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+
+# routes/teacher.py
+from flask import render_template, jsonify, request
+from datetime import datetime
+
 @teacher.route('/teacher/dashboard')
 @login_required
 @teacher_required
 def dashboard():
-    return render_template('teacher/dashboard.html')
+    today_attendance = Attendance.get_today_attendance(current_user.id)
+    today_date = datetime.now()
+    return render_template('teacher/dashboard.html', 
+                         today_attendance=today_attendance,
+                         today_date=today_date)
+
+@teacher.route('/teacher/check-in', methods=['POST'])
+@login_required
+@teacher_required
+def check_in():
+    location = request.form.get('location')
+    attendance = Attendance.mark_check_in(current_user.id, location)
+    return jsonify({
+        'status': 'success',
+        'check_in_time': attendance.check_in_time.strftime('%I:%M %p')
+    })
+
+@teacher.route('/teacher/check-out', methods=['POST'])
+@login_required
+@teacher_required
+def check_out():
+    location = request.form.get('location')
+    attendance = Attendance.mark_check_out(current_user.id, location)
+    return jsonify({
+        'status': 'success',
+        'check_out_time': attendance.check_out_time.strftime('%I:%M %p')
+    })
+
+
 
 
 from app.models.attendance import Attendance  # Add this import
