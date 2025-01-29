@@ -2,38 +2,89 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Homework</h1>
+    <h1 class="mb-4">Homework Assignments</h1>
 
-    <div class="row">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
         {% for hw in homework %}
-        <div class="col-md-6 mb-4">
-            <div class="card">
+        <div class="col">
+            <div class="card h-100 shadow-sm">
                 <div class="card-header {% if hw.id in submitted_hw_ids %}bg-success{% else %}bg-warning{% endif %} text-white">
-                    <h5 class="mb-0">{{ hw.title }}</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">{{ hw.title }}</h5>
+                        <span class="badge bg-light text-dark">
+                            {{ hw.due_date|datetimeformat('%b %d') }}
+                        </span>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">{{ hw.subject }}</h6>
-                    <p class="card-text">{{ hw.description }}</p>
-                    <p class="card-text">
-                        <small class="text-muted">Due: {{ hw.due_date.strftime('%Y-%m-%d') }}</small>
-                    </p>
-                    {% if hw.file_path %}
-                    <a href="{{ url_for('static', filename='uploads/' + hw.file_path) }}" 
-                       class="btn btn-sm btn-outline-primary" target="_blank">
-                        View Attachment
-                    </a>
-                    {% endif %}
+                    <h6 class="card-subtitle mb-2 text-muted">{{ hw.subject.value }}</h6>
+                    <p class="card-text">{{ hw.description|truncate(150) }}</p>
                     
-                    {% if hw.id not in submitted_hw_ids %}
-                    <a href="{{ url_for('student.submit_homework', homework_id=hw.id) }}" 
-                       class="btn btn-primary">Submit Homework</a>
-                    {% else %}
-                    <button class="btn btn-success" disabled>Submitted</button>
+                    <!-- Attachments Section -->
+                    {% if hw.file_path %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Attachments:</small>
+                        <div class="list-group">
+                            {% for file_path in hw.file_path|parse_json %}
+                            <a href="{{ url_for('static', filename=file_path) }}" 
+                               class="list-group-item list-group-item-action py-2 d-flex align-items-center"
+                               target="_blank">
+                                <i class="fas fa-file-pdf text-danger me-2"></i>
+                                <span class="text-truncate">
+                                    {{ file_path.split('/')[-1] }}
+                                </span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
                     {% endif %}
+
+                    <!-- Due Date & Submit Button -->
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Due: {{ hw.due_date|datetimeformat('%Y-%m-%d %H:%M') }}
+                            </small>
+                            {% if hw.id not in submitted_hw_ids %}
+                            <a href="{{ url_for('student.submit_homework', homework_id=hw.id) }}" 
+                               class="btn btn-primary btn-sm">
+                               <i class="fas fa-upload me-1"></i>Submit
+                            </a>
+                            {% else %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Submitted
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+    }
+    .list-group-item {
+        border-radius: 0.25rem !important;
+        margin-bottom: 0.25rem;
+    }
+    .text-truncate {
+        max-width: 200px;
+    }
+    @media (max-width: 768px) {
+        .card-title {
+            font-size: 1.1rem;
+        }
+        .card-text {
+            font-size: 0.9rem;
+        }
+    }
+</style>
 {% endblock %}

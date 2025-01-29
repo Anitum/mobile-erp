@@ -1,6 +1,6 @@
 from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from config import Config
 
@@ -36,6 +36,13 @@ def create_app():
 
     @app.route('/')
     def index():
+        if current_user.is_authenticated:
+            if current_user.role == 'admin':
+                return redirect(url_for('admin.dashboard'))
+            elif current_user.role == 'teacher':
+                return redirect(url_for('teacher.dashboard'))
+            else:
+                return redirect(url_for('student.dashboard'))
         return redirect(url_for('auth.login'))
 
     return app

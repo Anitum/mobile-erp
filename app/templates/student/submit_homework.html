@@ -2,36 +2,26 @@
 
 {% block content %}
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Submit Homework: {{ homework.title }}</h5>
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Submit Homework: {{ homework.title }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label">Upload Files</label>
+                    <input type="file" class="form-control" name="homework_files" multiple required>
+                    <small class="text-muted">You can select multiple files (Max 5 files, 10MB each)</small>
                 </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label class="form-label">Subject</label>
-                            <input type="text" class="form-control" value="{{ homework.subject }}" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Due Date</label>
-                            <input type="text" class="form-control" 
-                                   value="{{ homework.due_date.strftime('%Y-%m-%d') }}" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="homework_file" class="form-label">Upload Your Work</label>
-                            <input type="file" class="form-control" id="homework_file" 
-                                   name="homework_file" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="comments" class="form-label">Comments (Optional)</label>
-                            <textarea class="form-control" id="comments" name="comments" rows="3"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Submit Homework</button>
-                    </form>
+                <div class="mb-3">
+                    <label class="form-label">Comments</label>
+                    <textarea class="form-control" name="comments" rows="3"></textarea>
                 </div>
-            </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('student.homework_list') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Submit Homework</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

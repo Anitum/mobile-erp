@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 import os
 from functools import wraps
 from app.models.homework import SubjectEnum
-
+import json
 
 from app.models.report import DailyReport  # Import the DailyReport model
 from datetime import datetime
@@ -36,7 +36,11 @@ from datetime import datetime
 def dashboard():
     today_attendance = Attendance.get_today_attendance(current_user.id)
     today_date = datetime.now()
-    return render_template('teacher/dashboard.html', 
+    attendance_history = Attendance.query.filter_by(
+        user_id=current_user.id
+    ).order_by(Attendance.date.desc()).limit(10).all()
+    return render_template('teacher/dashboard.html',
+                         attendance_history=attendance_history,
                          today_attendance=today_attendance,
                          today_date=today_date)
 
@@ -148,6 +152,14 @@ def attendance():
                          attendance_dict=attendance_dict,
                          today=today)
 
+@teacher.app_template_filter('parse_json')
+def parse_json_filter(s):
+    try:
+        return json.loads(s) if s else []
+    except:
+        return []
+
+
 @teacher.route('/teacher/homework', methods=['GET', 'POST'])
 @login_required
 @teacher_required
@@ -176,9 +188,9 @@ def homework():
                 flash('Invalid date format', 'danger')
                 return redirect(url_for('teacher.homework'))
 
-            file_path = None
-            if 'file' in request.files:  # Changed to match template's file input name
-                file = request.files['file']
+            file_paths = []
+            files = request.files.getlist('files')  # Get list of files
+            for file in files:
                 if file and file.filename:
                     filename = secure_filename(file.filename)
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -186,13 +198,17 @@ def homework():
                     file_path = os.path.join('uploads', filename)
                     full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                     file.save(full_path)
-        
+                    file_paths.append(file_path)
+            
+            # Convert list to JSON string
+            file_path_json = json.dumps(file_paths) if file_paths else None
+
             new_homework = Homework(
                 title=title,
                 description=description,
                 due_date=due_date,
                 teacher_id=current_user.id,
-                file_path=file_path,
+                file_path=file_path_json,  # Store JSON string
                 subject=subject
             )
 
@@ -208,11 +224,34 @@ def homework():
             print(f"Error occurred: {str(e)}")  # Keep for debugging
             return redirect(url_for('teacher.homework'))
     
-    assigned_homework = Homework.query.filter_by(
-    teacher_id=current_user.id
-    ).order_by(Homework.due_date.desc()).all()
+    assignments = Homework.query.filter_by(teacher_id=current_user.id).all()
     
-    return render_template('teacher/homework.html', assigned_homework=assigned_homework, subjects=SubjectEnum)
+    processed_assignments = []
+    for hw in assignments:
+        # Process dates and status in Python
+
+        file_list = json.loads(hw.file_path) if hw.file_path else []
+        
+        is_pending = hw.due_date > datetime.utcnow()
+        status = 'pending' if is_pending else 'overdue'
+        due_date_str = hw.due_date.strftime('%b %d, %Y %H:%M')
+        created_str = hw.created_at.strftime('%b %d')
+        subject = str(hw.subject)
+        processed_assignments.append({
+            'id': hw.id,
+            'title': hw.title,
+            'subject': subject.split(".")[1].capitalize(),
+            'description': hw.description,
+            'status': status,
+            'due_date': due_date_str,
+            'created_at': created_str,
+            'file_count': len(file_list),
+            'files': file_list
+        })
+    
+    return render_template('teacher/homework.html',
+                         assignments=processed_assignments,
+                         subjects=SubjectEnum)
 
 
 @teacher.route('/teacher/daily-report', methods=['GET', 'POST'])
@@ -221,51 +260,42 @@ def homework():
 def daily_report():
     if request.method == 'POST':
         try:
-            print("Form submitted:", request.form)  # Debug print
-            print("Files:", request.files)  # Debug print
-            
-            # Get form data
             report_date = datetime.strptime(request.form.get('report_date'), '%Y-%m-%d')
             cleanliness = request.form.get('cleanliness')
             report_content = request.form.get('report_content')
             
-            print(f"Parsed data: date={report_date}, cleanliness={cleanliness}, content={report_content}")  # Debug print
-
-            # Handle file upload
-            file_path = None
-            if 'attachments' in request.files:
-                file = request.files['attachments']
+            file_paths = []
+            files = request.files.getlist('attachments')
+            
+            for file in files:
                 if file and file.filename:
                     filename = secure_filename(file.filename)
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     filename = f"{timestamp}_{filename}"
                     file_path = os.path.join('uploads', filename)
                     full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-                    print(f"Saving file to: {full_path}")  # Debug print
                     file.save(full_path)
+                    file_paths.append(file_path)
+            
+            # Store as comma-separated string
+            file_path_str = ','.join(file_paths) if file_paths else None
 
-            # Create new daily report
             new_report = DailyReport(
                 teacher_id=current_user.id,
                 date=report_date,
                 content=report_content,
-                file_path=file_path,
+                file_path=file_path_str,  # Store as string
                 status='pending'
             )
 
-            print("Created new report object")  # Debug print
-
-            # Add and commit to database
             db.session.add(new_report)
             db.session.commit()
-            print("Successfully committed to database")  # Debug print
-
+            
             flash('Daily report submitted successfully!', 'success')
             return redirect(url_for('teacher.daily_report'))
 
         except Exception as e:
             db.session.rollback()
-            print(f"Error occurred: {str(e)}")  # Debug print
             flash(f'Error submitting report: {str(e)}', 'danger')
             return redirect(url_for('teacher.daily_report'))
 
