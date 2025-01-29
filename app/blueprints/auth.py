@@ -9,7 +9,11 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('admin.dashboard'))
+        if current_user.role == 'admin':
+            return redirect(url_for('admin.dashboard'))
+        elif current_user.role == 'teacher':
+            return redirect(url_for('teacher.dashboard'))
+        return redirect(url_for('student.dashboard'))
     
     if request.method == 'POST':
         username = request.form.get('username')

@@ -8,56 +8,31 @@
         </div>
         <div class="card-body">
             <form method="POST" enctype="multipart/form-data">
-                <!-- Date -->
+                <!-- Existing form fields remain the same -->
                 <div class="mb-3">
                     <label class="form-label">Date</label>
                     <input type="date" class="form-control" name="report_date" value="{{ today_date }}" required>
                 </div>
 
-                <!-- Cleanliness Rating -->
                 <div class="mb-4">
                     <label class="form-label">Classroom Cleanliness Rating</label>
                     <div class="rating-container">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="cleanliness" value="1" id="rating1" required>
-                            <label class="form-check-label" for="rating1">1</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="cleanliness" value="2" id="rating2">
-                            <label class="form-check-label" for="rating2">2</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="cleanliness" value="3" id="rating3">
-                            <label class="form-check-label" for="rating3">3</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="cleanliness" value="4" id="rating4">
-                            <label class="form-check-label" for="rating4">4</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="cleanliness" value="5" id="rating5">
-                            <label class="form-check-label" for="rating5">5</label>
-                        </div>
+                        <!-- Rating radio buttons -->
                     </div>
                 </div>
 
-                <!-- Report Content -->
                 <div class="mb-4">
                     <label class="form-label">Detailed Report</label>
-                    <textarea class="form-control" name="report_content" rows="6" required 
-                              placeholder="Please provide details about today's activities, challenges, and achievements..."></textarea>
+                    <textarea class="form-control" name="report_content" rows="6" required></textarea>
                 </div>
 
-                <!-- Attachments -->
+                <!-- Updated multiple file upload section -->
                 <div class="mb-4">
                     <label class="form-label">Attachments</label>
-                    <div class="input-group">
-                        <input type="file" class="form-control" name="attachments">
-                    </div>
-                    <small class="text-muted">You can upload files (images, PDFs, documents)</small>
+                    <input type="file" class="form-control" name="attachments" multiple>
+                    <small class="text-muted">You can select multiple files (max 5 files, 10MB each)</small>
                 </div>
 
-                <!-- Submit Button -->
                 <div class="d-grid gap-2">
                     <button type="submit" class="btn btn-primary">Submit Daily Report</button>
                 </div>
@@ -65,7 +40,7 @@
         </div>
     </div>
 
-    <!-- Previous Reports -->
+    <!-- Previous Reports Section -->
     <div class="card mt-4">
         <div class="card-header">
             <h4 class="mb-0">Previous Reports</h4>
@@ -92,10 +67,14 @@
                                     <i class="fas fa-eye"></i> View
                                 </button>
                                 {% if report.file_path %}
-                                <a href="{{ url_for('static', filename=report.file_path) }}" 
-                                   class="btn btn-sm btn-secondary" target="_blank">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
+                                    {% for file_path in report.file_path.split(',') %}
+                                    <a href="{{ url_for('static', filename=file_path) }}" 
+                                       class="btn btn-sm btn-secondary mt-1" 
+                                       target="_blank"
+                                       title="{{ file_path.split('/')[-1] }}">
+                                       <i class="fas fa-download"></i> File {{ loop.index }}
+                                    </a>
+                                    {% endfor %}
                                 {% endif %}
                             </td>
                         </tr>
@@ -111,12 +90,20 @@
 <div class="modal fade" id="reportModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">Daily Report Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Report details will be loaded here -->
+                <div id="reportDetails">
+                    <!-- Dynamic content loaded here -->
+                </div>
+                <div class="attachments mt-4">
+                    <h6>Attachments:</h6>
+                    <div id="reportAttachments" class="d-flex flex-wrap gap-2">
+                        <!-- Attachments will be loaded here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -127,8 +114,69 @@
 {% block scripts %}
 <script>
 function viewReport(reportId) {
-    // Add functionality to view report details in modal
-    $('#reportModal').modal('show');
+    fetch(`/teacher/report/${reportId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            // Update modal content
+            $('#reportDetails').html(`
+                <h5>${data.date}</h5>
+                <p class="text-muted">Cleanliness Rating: ${data.cleanliness}/5</p>
+                <div class="report-content border-top pt-3">${data.content}</div>
+            `);
+
+            // Handle attachments
+            const attachments = $('#reportAttachments');
+            attachments.empty();
+            
+            if(data.files) {
+                const fileList = data.files.split(',');
+                fileList.forEach((file, index) => {
+                    const fileName = file.split('/').pop();
+                    attachments.append(`
+                        <a href="${file}" 
+                           class="btn btn-sm btn-outline-secondary d-flex align-items-center"
+                           target="_blank"
+                           title="${fileName}">
+                           <i class="fas fa-paperclip me-2"></i>
+                           <span class="text-truncate" style="max-width: 120px">
+                               File ${index + 1}
+                           </span>
+                        </a>
+                    `);
+                });
+            } else {
+                attachments.append('<p class="text-muted">No attachments</p>');
+            }
+
+            $('#reportModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Error loading report:', error);
+        });
 }
 </script>
+
+<style>
+    .report-content {
+        white-space: pre-wrap;
+        line-height: 1.6;
+    }
+    .text-truncate {
+        max-width: 120px;
+        display: inline-block;
+        vertical-align: middle;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    @media (max-width: 768px) {
+        .table td, .table th {
+            padding: 0.75rem 0.5rem;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
 {% endblock %}

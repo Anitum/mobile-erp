@@ -5,6 +5,7 @@ from app.models.message import Message
 from app.models.user import User
 from app import db
 import os
+import json
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from functools import wraps
@@ -19,6 +20,18 @@ def student_required(f):
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
+
+# Add template filter
+@student.app_template_filter('parse_json')
+def parse_json_filter(s):
+    try:
+        return json.loads(s) if s else []
+    except:
+        return []
+
+@student.app_template_filter('datetimeformat')
+def datetimeformat_filter(value, format='%Y-%m-%d %H:%M'):
+    return value.strftime(format)
 
 @student.route('/student/dashboard')
 @login_required
@@ -58,24 +71,33 @@ def submit_homework(homework_id):
     homework = Homework.query.get_or_404(homework_id)
     
     if request.method == 'POST':
-        file = request.files.get('homework_file')
+        files = request.files.getlist('homework_files')
         comments = request.form.get('comments')
         
-        if file:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-            
+        file_paths = []
+        for file in files:
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+                filename = f"{timestamp}_{filename}"
+                file_path = os.path.join('uploads', filename)
+                full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                file.save(full_path)
+                file_paths.append(file_path)
+        
+        if file_paths:
             submission = HomeworkSubmission(
                 homework_id=homework_id,
                 student_id=current_user.id,
-                file_path=filename,
+                file_path=json.dumps(file_paths),
                 comments=comments
             )
             db.session.add(submission)
             db.session.commit()
-            
             flash('Homework submitted successfully!', 'success')
             return redirect(url_for('student.homework_list'))
+        else:
+            flash('Please upload at least one file', 'danger')
             
     return render_template('student/submit_homework.html', homework=homework)
 

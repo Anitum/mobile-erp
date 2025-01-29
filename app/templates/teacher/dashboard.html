@@ -273,6 +273,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {% if attendance_history %}
                                 {% for record in attendance_history %}
                                 <tr>
                                     <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
@@ -287,11 +288,16 @@
                                     </td>
                                     <td>
                                         <span class="badge badge-{{ record.status|lower }}">
-                                            {{ record.status }}
+                                            {{ record.status | title }}
                                         </span>
                                     </td>
                                 </tr>
                                 {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No attendance records found.</td>
+                                </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -438,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        location.reload();
+                        window.location.reload();
                     } else {
                         alert('Failed to check in. Please try again.');
                         hideSpinner('checkInBtn', 'checkInSpinner');
@@ -469,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        location.reload();
+                        window.location.reload();
                     } else {
                         alert('Failed to check out. Please try again.');
                         hideSpinner('checkOutBtn', 'checkOutSpinner');
