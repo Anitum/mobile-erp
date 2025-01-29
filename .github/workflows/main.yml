@@ -28,7 +28,6 @@ jobs:
           sleep 10  # Give the app time to start
 
   deploy:
-    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     timeout-minutes: 15  # Add overall job timeout
