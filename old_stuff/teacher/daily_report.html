@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">Daily Report</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Basic Information -->
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="report_date" value="{{ today_date }}" required>
+                </div>
+
+                <!-- Cleanliness Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Classroom Cleanliness Assessment</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Floor Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Floor Condition</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Rating</label>
+                                    <div class="rating-container">
+                                        {% for i in range(5) %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="floor_rating" value="{{ i+1 }}" 
+                                                   id="floor_star_{{ i+1 }}">
+                                            <label class="form-check-label" for="floor_star_{{ i+1 }}">
+                                                <i class="fas fa-star"></i>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" class="form-control" name="floor_photo" 
+                                           accept="image/*" capture="environment">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="floor_remarks" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Benches Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Benches & Desks</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Rating</label>
+                                    <div class="rating-container">
+                                        {% for i in range(5) %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="bench_rating" value="{{ i+1 }}" 
+                                                   id="bench_star_{{ i+1 }}">
+                                            <label class="form-check-label" for="bench_star_{{ i+1 }}">
+                                                <i class="fas fa-star"></i>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" class="form-control" name="bench_photo" 
+                                           accept="image/*" capture="environment">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="bench_remarks" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Whiteboard Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Whiteboard</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Rating</label>
+                                    <div class="rating-container">
+                                        {% for i in range(5) %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="whiteboard_rating" value="{{ i+1 }}" 
+                                                   id="whiteboard_star_{{ i+1 }}">
+                                            <label class="form-check-label" for="whiteboard_star_{{ i+1 }}">
+                                                <i class="fas fa-star"></i>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" class="form-control" name="whiteboard_photo" 
+                                           accept="image/*" capture="environment">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="whiteboard_remarks" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Windows Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Windows</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Rating</label>
+                                    <div class="rating-container">
+                                        {% for i in range(5) %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="windows_rating" value="{{ i+1 }}" 
+                                                   id="windows_star_{{ i+1 }}">
+                                            <label class="form-check-label" for="windows_star_{{ i+1 }}">
+                                                <i class="fas fa-star"></i>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" class="form-control" name="windows_photo" 
+                                           accept="image/*" capture="environment">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="windows_remarks" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Walls Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Walls</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Rating</label>
+                                    <div class="rating-container">
+                                        {% for i in range(5) %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="walls_rating" value="{{ i+1 }}" 
+                                                   id="walls_star_{{ i+1 }}">
+                                            <label class="form-check-label" for="walls_star_{{ i+1 }}">
+                                                <i class="fas fa-star"></i>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" class="form-control" name="walls_photo" 
+                                           accept="image/*" capture="environment">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="walls_remarks" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dustbin Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Dustbins</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Rating</label>
+                                    <div class="rating-container">
+                                        {% for i in range(5) %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="dustbin_rating" value="{{ i+1 }}" 
+                                                   id="dustbin_star_{{ i+1 }}">
+                                            <label class="form-check-label" for="dustbin_star_{{ i+1 }}">
+                                                <i class="fas fa-star"></i>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" class="form-control" name="dustbin_photo" 
+                                           accept="image/*" capture="environment">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="dustbin_remarks" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Report -->
+                <div class="mb-4">
+                    <label class="form-label">Detailed Report</label>
+                    <textarea class="form-control" name="report_content" rows="6" required></textarea>
+                </div>
+
+                <!-- Additional Attachments -->
+                <div class="mb-4">
+                    <label class="form-label">Additional Attachments</label>
+                    <input type="file" class="form-control" name="attachments" multiple>
+                    <small class="text-muted">You can select multiple files (max 5 files, 10MB each)</small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Submit Daily Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-container {
+    display: flex;
+    gap: 10px;
+}
+
+.rating-container .fas {
+    color: #ffc107;
+    cursor: pointer;
+}
+
+.rating-container input[type="radio"] {
+    display: none;
+}
+
+.rating-container input[type="radio"]:checked ~ label .fas {
+    color: #ffc107;
+}
+
+.cleanliness-section {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.cleanliness-section:hover {
+    background-color: #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+@media (max-width: 768px) {
+    .rating-container {
+        flex-wrap: wrap;
+    }
+    
+    .cleanliness-section .row > div {
+        margin-bottom: 1rem;
+    }
+}
+</style>

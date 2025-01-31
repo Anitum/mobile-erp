@@ -261,33 +261,72 @@ def daily_report():
     if request.method == 'POST':
         try:
             report_date = datetime.strptime(request.form.get('report_date'), '%Y-%m-%d')
-            cleanliness = request.form.get('cleanliness')
             report_content = request.form.get('report_content')
             
-            file_paths = []
-            files = request.files.getlist('attachments')
-            
-            for file in files:
-                if file and file.filename:
-                    filename = secure_filename(file.filename)
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    filename = f"{timestamp}_{filename}"
-                    file_path = os.path.join('uploads', filename)
-                    full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-                    file.save(full_path)
-                    file_paths.append(file_path)
-            
-            # Store as comma-separated string
-            file_path_str = ','.join(file_paths) if file_paths else None
-
+            # Initialize new report
             new_report = DailyReport(
                 teacher_id=current_user.id,
                 date=report_date,
                 content=report_content,
-                file_path=file_path_str,  # Store as string
                 status='pending'
             )
+            
+            # Process cleanliness components
+            components = ['floor', 'bench', 'whiteboard', 'door', 'walls', 'dustbin']
+            total_rating = 0
+            valid_ratings_count = 0
+            
+            for component in components:
+                # Get rating with safe conversion to integer
+                rating = request.form.get(f'{component}_rating', '0')
+                try:
+                    rating_value = int(rating)
+                    if rating_value > 0:  # Only count valid ratings
+                        setattr(new_report, f'{component}_rating', rating_value)
+                        total_rating += rating_value
+                        valid_ratings_count += 1
+                except (ValueError, TypeError):
+                    setattr(new_report, f'{component}_rating', 0)
+                
+                # Get remarks
+                remarks = request.form.get(f'{component}_remarks')
+                if remarks:
+                    setattr(new_report, f'{component}_remarks', remarks)
+                
+                # Process photo
+                photo = request.files.get(f'{component}_photo')
+                if photo and photo.filename:
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{component}_{secure_filename(photo.filename)}"
+                    photo_path = os.path.join('uploads', filename)
+                    full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                    photo.save(full_path)
+                    setattr(new_report, f'{component}_photo', photo_path)
 
+            # Calculate average cleanliness rating safely
+            if valid_ratings_count > 0:
+                new_report.cleanliness_rating = round(total_rating / valid_ratings_count, 2)
+            else:
+                new_report.cleanliness_rating = 0
+            
+            # Process additional attachments
+            attachment_paths = []
+            files = request.files.getlist('attachments')
+            for file in files:
+                if file and file.filename:
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_attachment_{filename}"
+                    file_path = os.path.join('uploads', filename)
+                    full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                    file.save(full_path)
+                    attachment_paths.append(file_path)
+            
+            # Store attachments as string
+            if attachment_paths:
+                new_report.file_path = ','.join(attachment_paths)
+            
+            # Save to database
             db.session.add(new_report)
             db.session.commit()
             
@@ -297,6 +336,7 @@ def daily_report():
         except Exception as e:
             db.session.rollback()
             flash(f'Error submitting report: {str(e)}', 'danger')
+            print(f"Error details: {str(e)}")  # For debugging
             return redirect(url_for('teacher.daily_report'))
 
     # For GET request
@@ -305,19 +345,50 @@ def daily_report():
         teacher_id=current_user.id
     ).order_by(DailyReport.date.desc()).all()
 
-    daily_tasks = [
-        {'id': 1, 'description': 'Take attendance'},
-        {'id': 2, 'description': 'Complete lesson plan'},
-        {'id': 3, 'description': 'Grade assignments'},
-    ]
-    
-    total_tasks = len(daily_tasks)
-
     return render_template('teacher/daily_report.html',
                          today_date=today_date,
-                         previous_reports=previous_reports,
-                         daily_tasks=daily_tasks,
-                         total_tasks=total_tasks)
+                         previous_reports=previous_reports)
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@teacher.route('/teacher/report/<int:report_id>/details')
+@login_required
+@teacher_required
+def get_report_details(report_id):
+    """API endpoint to get report details for modal view"""
+    report = DailyReport.query.get_or_404(report_id)
+    
+    # Ensure teacher can only view their own reports
+    if report.teacher_id != current_user.id:
+        pass
+    
+    components = ['floor', 'bench', 'whiteboard', 'door', 'walls', 'dustbin']
+    cleanliness_details = {}
+    
+    for component in components:
+        rating = getattr(report, f'{component}_rating', None)
+        photo = getattr(report, f'{component}_photo', None)
+        remarks = getattr(report, f'{component}_remarks', None)
+        
+        if rating or photo or remarks:
+            cleanliness_details[component] = {
+                'rating': rating,
+                'photo': url_for('static', filename=photo) if photo else None,
+                'remarks': remarks
+            }
+    
+    return jsonify({
+        'date': report.date.strftime('%Y-%m-%d %H:%M'),
+        'content': report.content,
+        'cleanliness': cleanliness_details,
+        'files': report.attachments.split(',') if report.attachments else [],
+        'status': report.status
+    })
+
 
 @teacher.route('/teacher/messages', methods=['GET', 'POST'])
 @login_required

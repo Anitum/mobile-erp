@@ -3,180 +3,538 @@
 {% block content %}
 <div class="container">
     <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-primary text-white">
             <h3 class="mb-0">Daily Report</h3>
         </div>
         <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
-                <!-- Existing form fields remain the same -->
+            <form method="POST" enctype="multipart/form-data" id="dailyReportForm">
+                <!-- Basic Information -->
                 <div class="mb-3">
                     <label class="form-label">Date</label>
                     <input type="date" class="form-control" name="report_date" value="{{ today_date }}" required>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label">Classroom Cleanliness Rating</label>
-                    <div class="rating-container">
-                        <!-- Rating radio buttons -->
+                <!-- Cleanliness Assessment -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Classroom Cleanliness Assessment</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Floor Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Floor Condition</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="rating-group">
+                                        <label class="form-label">Rating</label>
+                                        <div class="star-rating" data-rating="0">
+                                            <input type="hidden" name="floor_rating" value="0">
+                                            <i class="far fa-star" data-value="1"></i>
+                                            <i class="far fa-star" data-value="2"></i>
+                                            <i class="far fa-star" data-value="3"></i>
+                                            <i class="far fa-star" data-value="4"></i>
+                                            <i class="far fa-star" data-value="5"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="floor_photo" accept="image/*" capture="environment">
+                                        <button class="btn btn-outline-secondary preview-btn" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="floor_remarks" rows="2" placeholder="Any specific observations..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Benches Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Benches & Desks</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="rating-group">
+                                        <label class="form-label">Rating</label>
+                                        <div class="star-rating" data-rating="0">
+                                            <input type="hidden" name="bench_rating" value="0">
+                                            <i class="far fa-star" data-value="1"></i>
+                                            <i class="far fa-star" data-value="2"></i>
+                                            <i class="far fa-star" data-value="3"></i>
+                                            <i class="far fa-star" data-value="4"></i>
+                                            <i class="far fa-star" data-value="5"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="bench_photo" accept="image/*" capture="environment">
+                                        <button class="btn btn-outline-secondary preview-btn" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="bench_remarks" rows="2" placeholder="Any specific observations..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Whiteboard Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Whiteboard</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="rating-group">
+                                        <label class="form-label">Rating</label>
+                                        <div class="star-rating" data-rating="0">
+                                            <input type="hidden" name="whiteboard_rating" value="0">
+                                            <i class="far fa-star" data-value="1"></i>
+                                            <i class="far fa-star" data-value="2"></i>
+                                            <i class="far fa-star" data-value="3"></i>
+                                            <i class="far fa-star" data-value="4"></i>
+                                            <i class="far fa-star" data-value="5"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="whiteboard_photo" accept="image/*" capture="environment">
+                                        <button class="btn btn-outline-secondary preview-btn" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="whiteboard_remarks" rows="2" placeholder="Any specific observations..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Doors Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Doors</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="rating-group">
+                                        <label class="form-label">Rating</label>
+                                        <div class="star-rating" data-rating="0">
+                                            <input type="hidden" name="door_rating" value="0">
+                                            <i class="far fa-star" data-value="1"></i>
+                                            <i class="far fa-star" data-value="2"></i>
+                                            <i class="far fa-star" data-value="3"></i>
+                                            <i class="far fa-star" data-value="4"></i>
+                                            <i class="far fa-star" data-value="5"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="door_photo" accept="image/*" capture="environment">
+                                        <button class="btn btn-outline-secondary preview-btn" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="door_remarks" rows="2" placeholder="Any specific observations..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Walls Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Walls</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="rating-group">
+                                        <label class="form-label">Rating</label>
+                                        <div class="star-rating" data-rating="0">
+                                            <input type="hidden" name="walls_rating" value="0">
+                                            <i class="far fa-star" data-value="1"></i>
+                                            <i class="far fa-star" data-value="2"></i>
+                                            <i class="far fa-star" data-value="3"></i>
+                                            <i class="far fa-star" data-value="4"></i>
+                                            <i class="far fa-star" data-value="5"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="walls_photo" accept="image/*" capture="environment">
+                                        <button class="btn btn-outline-secondary preview-btn" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="walls_remarks" rows="2" placeholder="Any specific observations..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dustbin Section -->
+                        <div class="cleanliness-section mb-4 p-3 border rounded">
+                            <h6 class="border-bottom pb-2">Dustbins</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="rating-group">
+                                        <label class="form-label">Rating</label>
+                                        <div class="star-rating" data-rating="0">
+                                            <input type="hidden" name="dustbin_rating" value="0">
+                                            <i class="far fa-star" data-value="1"></i>
+                                            <i class="far fa-star" data-value="2"></i>
+                                            <i class="far fa-star" data-value="3"></i>
+                                            <i class="far fa-star" data-value="4"></i>
+                                            <i class="far fa-star" data-value="5"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Photo</label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="dustbin_photo" accept="image/*" capture="environment">
+                                        <button class="btn btn-outline-secondary preview-btn" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="dustbin_remarks" rows="2" placeholder="Any specific observations..."></textarea>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Overall Report -->
                 <div class="mb-4">
-                    <label class="form-label">Detailed Report</label>
-                    <textarea class="form-control" name="report_content" rows="6" required></textarea>
+                    <label class="form-label">Overall Report</label>
+                    <textarea class="form-control" name="report_content" rows="6" required 
+                              placeholder="Provide a detailed description of the classroom condition and any notable observations..."></textarea>
                 </div>
 
-                <!-- Updated multiple file upload section -->
+                <!-- Additional Attachments -->
                 <div class="mb-4">
-                    <label class="form-label">Attachments</label>
+                    <label class="form-label">Additional Attachments</label>
                     <input type="file" class="form-control" name="attachments" multiple>
                     <small class="text-muted">You can select multiple files (max 5 files, 10MB each)</small>
                 </div>
 
+                <!-- Submit Button -->
                 <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary">Submit Daily Report</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Daily Report
+                    </button>
                 </div>
             </form>
         </div>
     </div>
-
-    <!-- Previous Reports Section -->
-    <div class="card mt-4">
-        <div class="card-header">
-            <h4 class="mb-0">Previous Reports</h4>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Content</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for report in previous_reports %}
-                        <tr>
-                            <td>{{ report.date.strftime('%Y-%m-%d') }}</td>
-                            <td>{{ report.content[:50] }}...</td>
-                            <td>{{ report.status }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-info" onclick="viewReport({{ report.id }})">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                {% if report.file_path %}
-                                    {% for file_path in report.file_path.split(',') %}
-                                    <a href="{{ url_for('static', filename=file_path) }}" 
-                                       class="btn btn-sm btn-secondary mt-1" 
-                                       target="_blank"
-                                       title="{{ file_path.split('/')[-1] }}">
-                                       <i class="fas fa-download"></i> File {{ loop.index }}
-                                    </a>
-                                    {% endfor %}
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
 
-<!-- Report View Modal -->
-<div class="modal fade" id="reportModal" tabindex="-1">
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Daily Report Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header">
+                <h5 class="modal-title">Image Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div id="reportDetails">
-                    <!-- Dynamic content loaded here -->
-                </div>
-                <div class="attachments mt-4">
-                    <h6>Attachments:</h6>
-                    <div id="reportAttachments" class="d-flex flex-wrap gap-2">
-                        <!-- Attachments will be loaded here -->
-                    </div>
-                </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" alt="Preview" class="img-fluid">
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block styles %}
+<style>
+.cleanliness-section {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.cleanliness-section:hover {
+    background-color: #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transform: translateY(-2px);
+}
+
+.star-rating {
+    display: inline-flex;
+    gap: 0.25rem;
+    cursor: pointer;
+    padding: 5px 0;
+}
+
+.star-rating i {
+    color: #ffc107;
+    font-size: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.star-rating i:hover {
+    transform: scale(1.2);
+}
+
+.star-rating[data-rating="1"] i:nth-child(-n+1),
+.star-rating[data-rating="2"] i:nth-child(-n+2),
+.star-rating[data-rating="3"] i:nth-child(-n+3),
+.star-rating[data-rating="4"] i:nth-child(-n+4),
+.star-rating[data-rating="5"] i:nth-child(-n+5) {
+    font-weight: 900;
+    content: "\f005";
+    color: #ffc107;
+}
+
+.preview-btn {
+    white-space: nowrap;
+}
+
+.card-header {
+    border-bottom: 2px solid #e9ecef;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.input-group {
+    box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.05);
+    border-radius: 0.375rem;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: none;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.rating-group {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.05);
+}
+
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.img-fluid {
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+@media (max-width: 768px) {
+    .rating-group {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .cleanliness-section {
+        padding: 15px !important;
+    }
+    
+    .star-rating i {
+        font-size: 1.5rem;
+    }
+    
+    .input-group {
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+/* Animation for hover effects */
+.cleanliness-section {
+    transform-origin: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.star-rating i {
+    transform-origin: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom scrollbar for textareas */
+textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* File input styling */
+input[type="file"] {
+    cursor: pointer;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+    visibility: hidden;
+    display: none;
+}
+
+input[type="file"]::before {
+    content: 'Select Photo';
+    display: inline-block;
+    background: linear-gradient(top, #f9f9f9, #e3e3e3);
+    border: 1px solid #999;
+    border-radius: 3px;
+    padding: 5px 8px;
+    outline: none;
+    white-space: nowrap;
+    cursor: pointer;
+    text-shadow: 1px 1px #fff;
+    font-weight: 700;
+    font-size: 10pt;
+}
+
+/* Loading state for submit button */
+.btn-primary.loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-primary.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin: -8px 0 0 -8px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-right-color: transparent;
+    animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function viewReport(reportId) {
-    fetch(`/teacher/report/${reportId}/details`)
-        .then(response => response.json())
-        .then(data => {
-            // Update modal content
-            $('#reportDetails').html(`
-                <h5>${data.date}</h5>
-                <p class="text-muted">Cleanliness Rating: ${data.cleanliness}/5</p>
-                <div class="report-content border-top pt-3">${data.content}</div>
-            `);
-
-            // Handle attachments
-            const attachments = $('#reportAttachments');
-            attachments.empty();
+document.addEventListener('DOMContentLoaded', function() {
+    // Star Rating Functionality
+    document.querySelectorAll('.star-rating').forEach(container => {
+        const stars = container.querySelectorAll('i');
+        const input = container.querySelector('input[type="hidden"]');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const value = star.dataset.value;
+                container.dataset.rating = value;
+                input.value = value;
+            });
             
-            if(data.files) {
-                const fileList = data.files.split(',');
-                fileList.forEach((file, index) => {
-                    const fileName = file.split('/').pop();
-                    attachments.append(`
-                        <a href="${file}" 
-                           class="btn btn-sm btn-outline-secondary d-flex align-items-center"
-                           target="_blank"
-                           title="${fileName}">
-                           <i class="fas fa-paperclip me-2"></i>
-                           <span class="text-truncate" style="max-width: 120px">
-                               File ${index + 1}
-                           </span>
-                        </a>
-                    `);
-                });
-            } else {
-                attachments.append('<p class="text-muted">No attachments</p>');
-            }
-
-            $('#reportModal').modal('show');
-        })
-        .catch(error => {
-            console.error('Error loading report:', error);
+            star.addEventListener('mouseover', () => {
+                const value = star.dataset.value;
+                highlightStars(stars, value);
+            });
         });
-}
+        
+        container.addEventListener('mouseleave', () => {
+            const currentRating = container.dataset.rating;
+            highlightStars(stars, currentRating);
+        });
+    });
+    
+    function highlightStars(stars, value) {
+        stars.forEach(star => {
+            const starValue = star.dataset.value;
+            star.classList.remove('fas', 'far');
+            star.classList.add(starValue <= value ? 'fas' : 'far');
+        });
+    }
+    
+    // Image Preview Functionality
+    const previewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+    const previewImage = document.getElementById('previewImage');
+    
+    document.querySelectorAll('.preview-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const fileInput = this.previousElementSibling;
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewModal.show();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+    
+    // Form Submit Handler
+    const form = document.getElementById('dailyReportForm');
+    form.addEventListener('submit', function(e) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+    });
+});
 </script>
-
-<style>
-    .report-content {
-        white-space: pre-wrap;
-        line-height: 1.6;
-    }
-    .text-truncate {
-        max-width: 120px;
-        display: inline-block;
-        vertical-align: middle;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    @media (max-width: 768px) {
-        .table td, .table th {
-            padding: 0.75rem 0.5rem;
-        }
-        .btn-sm {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.8rem;
-        }
-    }
-</style>
 {% endblock %}

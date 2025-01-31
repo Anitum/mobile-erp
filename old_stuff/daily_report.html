@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">Daily Report</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Existing form fields remain the same -->
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="report_date" value="{{ today_date }}" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Classroom Cleanliness Rating</label>
+                    <div class="rating-container">
+                        <!-- Rating radio buttons -->
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Detailed Report</label>
+                    <textarea class="form-control" name="report_content" rows="6" required></textarea>
+                </div>
+
+                <!-- Updated multiple file upload section -->
+                <div class="mb-4">
+                    <label class="form-label">Attachments</label>
+                    <input type="file" class="form-control" name="attachments" multiple>
+                    <small class="text-muted">You can select multiple files (max 5 files, 10MB each)</small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Submit Daily Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Previous Reports Section -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4 class="mb-0">Previous Reports</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Content</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in previous_reports %}
+                        <tr>
+                            <td>{{ report.date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ report.content[:50] }}...</td>
+                            <td>{{ report.status }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="viewReport({{ report.id }})">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% if report.file_path %}
+                                    {% for file_path in report.file_path.split(',') %}
+                                    <a href="{{ url_for('static', filename=file_path) }}" 
+                                       class="btn btn-sm btn-secondary mt-1" 
+                                       target="_blank"
+                                       title="{{ file_path.split('/')[-1] }}">
+                                       <i class="fas fa-download"></i> File {{ loop.index }}
+                                    </a>
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report View Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Daily Report Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reportDetails">
+                    <!-- Dynamic content loaded here -->
+                </div>
+                <div class="attachments mt-4">
+                    <h6>Attachments:</h6>
+                    <div id="reportAttachments" class="d-flex flex-wrap gap-2">
+                        <!-- Attachments will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewReport(reportId) {
+    fetch(`/teacher/report/${reportId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            // Update modal content
+            $('#reportDetails').html(`
+                <h5>${data.date}</h5>
+                <p class="text-muted">Cleanliness Rating: ${data.cleanliness}/5</p>
+                <div class="report-content border-top pt-3">${data.content}</div>
+            `);
+
+            // Handle attachments
+            const attachments = $('#reportAttachments');
+            attachments.empty();
+            
+            if(data.files) {
+                const fileList = data.files.split(',');
+                fileList.forEach((file, index) => {
+                    const fileName = file.split('/').pop();
+                    attachments.append(`
+                        <a href="${file}" 
+                           class="btn btn-sm btn-outline-secondary d-flex align-items-center"
+                           target="_blank"
+                           title="${fileName}">
+                           <i class="fas fa-paperclip me-2"></i>
+                           <span class="text-truncate" style="max-width: 120px">
+                               File ${index + 1}
+                           </span>
+                        </a>
+                    `);
+                });
+            } else {
+                attachments.append('<p class="text-muted">No attachments</p>');
+            }
+
+            $('#reportModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Error loading report:', error);
+        });
+}
+</script>
+
+<style>
+    .report-content {
+        white-space: pre-wrap;
+        line-height: 1.6;
+    }
+    .text-truncate {
+        max-width: 120px;
+        display: inline-block;
+        vertical-align: middle;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    @media (max-width: 768px) {
+        .table td, .table th {
+            padding: 0.75rem 0.5rem;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
