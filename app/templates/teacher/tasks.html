@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Tasks</h1>
+
+    <!-- Task Categories -->
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        <div class="col">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Tasks</h5>
+                    <p class="display-4 mb-0">{{ tasks|selectattr('status', 'equalto', 'pending')|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Completed Tasks</h5>
+                    <p class="display-4 mb-0">{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Overdue Tasks</h5>
+                    <p class="display-4 mb-0">{{ tasks|selectattr('status', 'equalto', 'pending')|selectattr('due_date', 'le', now)|list|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks List -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#pending">Pending</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#completed">Completed</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                <!-- Pending Tasks -->
+                <div class="tab-pane fade show active" id="pending">
+                    {% set pending_tasks = tasks|selectattr('status', 'equalto', 'pending')|list %}
+                    {% if pending_tasks %}
+                        <div class="row row-cols-1 row-cols-md-2 g-4">
+                            {% for task in pending_tasks %}
+                            <div class="col">
+                                <div class="card h-100 border-{% if task.due_date <= now %}danger{% else %}warning{% endif %} transition-card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">{{ task.title }}</h5>
+                                        <span class="badge bg-{{ {
+                                            'high': 'danger',
+                                            'medium': 'warning',
+                                            'low': 'info'
+                                        }[task.priority] }}">{{ task.priority }}</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">{{ task.description }}</p>
+                                        <div class="text-muted small mb-3">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Due: {{ task.due_date.strftime('%Y-%m-%d %H:%M') }}
+                                            {% if task.due_date <= now %}
+                                                <span class="text-danger">(Overdue)</span>
+                                            {% endif %}
+                                            {% if task.task_file %}
+                                            <div class="mt-2">
+                                                <a href="{{ url_for('static', filename=task.task_file) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="fas fa-file me-1"></i>View Attachment
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <button class="btn btn-success w-100" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#completeTaskModal"
+                                                data-task-id="{{ task.id }}"
+                                                data-task-title="{{ task.title }}">
+                                            <i class="fas fa-check me-2"></i>Mark as Complete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-check-circle fa-3x mb-3"></i>
+                            <p class="mb-0">No pending tasks!</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Completed Tasks -->
+                <div class="tab-pane fade" id="completed">
+                    {% set completed_tasks = tasks|selectattr('status', 'equalto', 'completed')|list %}
+                    {% if completed_tasks %}
+                        <div class="row row-cols-1 row-cols-md-2 g-4">
+                            {% for task in completed_tasks %}
+                            <div class="col">
+                                <div class="card h-100 border-success transition-card">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="card-title mb-0">{{ task.title }}</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">{{ task.description }}</p>
+                                        <div class="mb-3">
+                                            <strong>Completion Notes:</strong>
+                                            <p>{{ task.completion_notes }}</p>
+                                        </div>
+                                        {% if task.completion_image %}
+                                        <div class="text-center">
+                                            <img src="{{ url_for('static', filename=task.completion_image) }}" 
+                                                 class="img-fluid rounded mb-3" 
+                                                 alt="Task completion image"
+                                                 style="max-height: 200px;">
+                                        </div>
+                                        {% endif %}
+                                        <div class="text-muted small">
+                                            <div><i class="fas fa-calendar-check me-1"></i>Completed: {{ task.completed_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                            <div><i class="fas fa-calendar me-1"></i>Due: {{ task.due_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-tasks fa-3x mb-3"></i>
+                            <p class="mb-0">No completed tasks yet!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Complete Task Modal -->
+<div class="modal fade" id="completeTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="" enctype="multipart/form-data" id="completeTaskForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Complete Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Completion Notes</label>
+                        <textarea class="form-control" name="completion_notes" rows="4" required
+                                  placeholder="Describe how you completed this task..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload Image (Optional)</label>
+                        <input type="file" class="form-control" name="completion_image" accept="image/*">
+                        <div class="form-text">Upload an image showing the completed task</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>Complete Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.transition-card {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.transition-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+}
+
+.card-header {
+    border-bottom: 2px solid rgba(0,0,0,.125);
+}
+
+.nav-tabs .nav-link {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.8em;
+}
+
+.display-4 {
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle Complete Task Modal
+    const completeTaskModal = document.getElementById('completeTaskModal');
+    if (completeTaskModal) {
+        completeTaskModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const taskId = button.getAttribute('data-task-id');
+            const taskTitle = button.getAttribute('data-task-title');
+            
+            const form = completeTaskModal.querySelector('#completeTaskForm');
+            form.action = `/teacher/tasks/${taskId}/complete`;
+            
+            const modalTitle = completeTaskModal.querySelector('.modal-title');
+            modalTitle.textContent = `Complete Task: ${taskTitle}`;
+        });
+    }
+
+    // Image Preview
+    const imageInput = document.querySelector('input[name="completion_image"]');
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // You could add image preview logic here if desired
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

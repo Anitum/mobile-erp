@@ -4,6 +4,7 @@ from app.models.user import User
 from app.models.report import DailyReport
 from app.models.assignment import AdminAssignment
 from app.models.message import Message
+from app.models.TeacherTask import TeacherTask
 from app import db
 import os
 from werkzeug.utils import secure_filename
@@ -241,3 +242,52 @@ def all_attendance():
     attendances = Attendance.query.order_by(Attendance.date.desc()).all()
     return render_template('admin/all_attendance.html', attendances=attendances)
 
+
+
+@admin.route('/tasks', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_tasks():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')
+        assigned_to = request.form.get('assigned_to')
+        due_date = request.form.get('due_date')
+        priority = request.form.get('priority', 'medium')
+
+        file = request.files.get('task_file')
+        print(file)
+        file_path = None
+        if file:
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{timestamp}_{filename}"
+            file_path = os.path.join('uploads', filename)
+            full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            file.save(full_path)
+
+
+        try:
+            due_date = datetime.strptime(due_date, '%Y-%m-%dT%H:%M')
+            task = TeacherTask(
+                title=title,
+                description=description,
+                assigned_to=assigned_to,
+                assigned_by=current_user.id,
+                due_date=due_date,
+                priority=priority,
+                task_file=file_path
+            )
+            db.session.add(task)
+            db.session.commit()
+            flash('Task assigned successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('Error assigning task. Please try again.', 'danger')
+            print(f"Error: {str(e)}")
+
+        return redirect(url_for('admin.manage_tasks'))
+
+    teachers = User.query.filter_by(role='teacher').all()
+    tasks = TeacherTask.query.order_by(TeacherTask.created_at.desc()).all()
+    return render_template('admin/tasks.html', teachers=teachers, tasks=tasks)

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from app.models.user import User
 from app.models.homework import Homework
+from app.models.TeacherTask import TeacherTask
 from app import db
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -408,3 +409,66 @@ def messages():
         return redirect(url_for('teacher.messages'))
     
     return render_template('teacher/messages.html')
+
+@teacher.route('/teacher/tasks')
+@login_required
+@teacher_required
+def view_tasks():
+    print("#"*30)
+    tasks = TeacherTask.query.filter_by(assigned_to=current_user.id)\
+        .order_by(TeacherTask.due_date.asc()).all()
+    return render_template('teacher/tasks.html', tasks=tasks, now=datetime.utcnow() )
+
+@teacher.route('/teacher/tasks/<int:task_id>/complete', methods=['POST'])
+@login_required
+@teacher_required
+def complete_task(task_id):
+    print("*"*30)
+    task = TeacherTask.query.get_or_404(task_id)
+    print("*"*30)
+
+    
+    # Check if the task belongs to the current teacher
+    if task.assigned_to != current_user.id:
+        flash('You are not authorized to complete this task.', 'danger')
+        return redirect(url_for('teacher.view_tasks'))
+
+    completion_notes = request.form.get('completion_notes')
+    completion_image = request.files.get('completion_image')
+    print("*"*30)
+
+
+    if completion_image:
+        # Save the image
+        filename = secure_filename(completion_image.filename)
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}_{filename}"
+        file_path = os.path.join('uploads', filename)
+        full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        
+        try:
+            completion_image.save(full_path)
+            task.completion_image = file_path
+        except Exception as e:
+            print(f"Error saving image: {str(e)}")
+            flash('Error uploading image. Task was not marked as complete.', 'danger')
+            return redirect(url_for('teacher.view_tasks'))
+
+    # Update task status and details
+    task.status = 'completed'
+    task.completion_notes = completion_notes
+    task.completed_at = datetime.utcnow()
+    print("*"*30)
+
+
+    try:
+        db.session.commit()
+        flash('Task marked as completed successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error completing task: {str(e)}")
+        flash('Error marking task as complete. Please try again.', 'danger')
+
+    print("*"*30)
+
+    return redirect(url_for('teacher.view_tasks'))
