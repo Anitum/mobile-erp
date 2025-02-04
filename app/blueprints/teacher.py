@@ -35,6 +35,11 @@ from datetime import datetime
 @login_required
 @teacher_required
 def dashboard():
+
+    weekly_attendance = {
+        'present': [95, 92, 88, 93, 90],  # Replace with actual data
+        'absent': [5, 8, 12, 7, 10]       # Replace with actual data
+    }    
     today_attendance = Attendance.get_today_attendance(current_user.id)
     today_date = datetime.now()
     attendance_history = Attendance.query.filter_by(
@@ -43,7 +48,8 @@ def dashboard():
     return render_template('teacher/dashboard.html',
                          attendance_history=attendance_history,
                          today_attendance=today_attendance,
-                         today_date=today_date)
+                         today_date=today_date,
+                         weekly_attendance=weekly_attendance)
 
 @teacher.route('/teacher/check-in', methods=['POST'])
 @login_required

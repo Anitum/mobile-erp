@@ -63,8 +63,11 @@
                             <p class="card-text">{{ message.content }}</p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">
-                                    From: {{ message.sender_id }} | 
-                                    {{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                                    From: 
+                                    <a href="{{ url_for('admin.teacher_profile', teacher_id=message.sender.id) }}">
+                                       {{ message.sender.first_name }} {{ message.sender.last_name }}
+                                    </a>
+                                    | {{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}
                                 </small>
                                 {% if message.file_path %}
                                 <a href="{{ url_for('static', filename='uploads/' + message.file_path) }}" 

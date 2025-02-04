@@ -1,0 +1,5 @@
+{% macro teacher_profile_link(teacher) %}
+    <a href="{{ url_for('admin.teacher_profile', teacher_id=teacher.id) }}">
+        {{ teacher.first_name }} {{ teacher.last_name }}
+    </a>
+{% endmacro %}

@@ -37,7 +37,11 @@
                                 {% for task in tasks %}
                                 <tr>
                                     <td>{{ task.title }}</td>
-                                    <td>{{ task.assignee.first_name }} {{ task.assignee.last_name }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.teacher_profile', teacher_id=task.assignee.id) }}">
+                                        {{ task.assignee.first_name }} {{ task.assignee.last_name }}
+                                        </a>
+                                    </td>
                                     <td>{{ task.due_date.strftime('%Y-%m-%d %H:%M') }}</td>
                                     <td>
                                         <span class="badge bg-{{ {

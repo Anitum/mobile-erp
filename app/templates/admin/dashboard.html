@@ -45,6 +45,9 @@
         </div>
     </div>
 
+
+
+
     <!-- Teacher Attendance Today -->
     <div class="row mb-4">
         <div class="col-md-6">
@@ -63,9 +66,15 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                
                                 {% for attendance in teacher_attendance %}
                                 <tr>
-                                    <td>{{ attendance.teacher_name }}</td>
+                                    <td>
+                                        
+                                        <a href="{{ url_for('admin.teacher_profile', teacher_id=attendance.teacher_id) }}">
+                                            {{ attendance.teacher_name }}
+                                        </a>
+                                    </td>
                                     <td>{{ attendance.check_in_time.strftime('%H:%M') }}</td>
                                     <td>
                                         <span class="badge {% if attendance.is_late %}bg-warning{% else %}bg-success{% endif %}">
@@ -145,14 +154,14 @@
                 </div>
             </div>
         </div>
-
+        <!-- Replace the Monthly Attendance Trends card with Tasks card -->
         <div class="col-md-6 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Monthly Attendance Trends</h5>
+                    <h5 class="mb-0">Tasks Overview</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="monthlyAttendanceChart"></canvas>
+                    <canvas id="tasksChart"></canvas>
                 </div>
             </div>
         </div>
@@ -161,5 +170,100 @@
 {% endblock %}
 
 {% block scripts %}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Weekly Attendance Chart
+    initWeeklyAttendanceChart();
+    
+    // Tasks Chart
+    const tasksCtx = document.getElementById('tasksChart').getContext('2d');
+    const taskDates = {{ task_dates|tojson|safe }};
+    const taskCounts = {{ task_counts|tojson|safe }};
+    const taskColors = {{ task_colors|tojson|safe }};
+    const taskBorderColors = {{ task_border_colors|tojson|safe }};
+    const taskDetails = {{ task_details|tojson|safe }};
+
+    new Chart(tasksCtx, {
+        type: 'bar',
+        data: {
+            labels: taskDates,
+            datasets: [{
+                label: 'Tasks',
+                data: taskCounts,
+                backgroundColor: taskColors,
+                borderColor: taskBorderColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const tasks = taskDetails[context.dataIndex];
+                            return tasks.map(task => 
+                                `${task.title} (${task.priority}) - Due: ${task.due_date}`
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+function initWeeklyAttendanceChart() {
+    const ctx = document.getElementById('weeklyAttendanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+            datasets: [
+                {
+                    label: 'Present',
+                    data: [95, 92, 88, 93, 90],
+                    backgroundColor: 'rgba(40, 167, 69, 0.5)',
+                    borderColor: 'rgb(40, 167, 69)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Absent',
+                    data: [5, 8, 12, 7, 10],
+                    backgroundColor: 'rgba(220, 53, 69, 0.5)',
+                    borderColor: 'rgb(220, 53, 69)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: value => value + '%'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+</script>     
 {% endblock %}

@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Profile Header -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                            <span class="display-4">{{ teacher.first_name[0] }}{{ teacher.last_name[0] }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="mb-0">{{ teacher.first_name }} {{ teacher.last_name }}</h2>
+                        <span class="badge bg-{{ 'success' if teacher.is_active else 'danger' }}">
+                            {{ 'Active' if teacher.is_active else 'Inactive' }}
+                        </span>
+                    </div>
+                    <p class="text-muted">Teacher ID: {{ teacher.id }}</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><i class="fas fa-envelope me-2"></i>{{ teacher.email }}</p>
+                            <p><i class="fas fa-calendar-alt me-2"></i>Joined: {{ teacher.created_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Statistics Cards -->
+        <div class="col-md-4 mb-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Attendance Rate</h6>
+                    <h2 class="mb-0">{{ '{:.1f}%'.format(attendance_rate) }}</h2>
+                    <small>Last 30 days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Tasks Completed</h6>
+                    <h2 class="mb-0">{{ completed_tasks }}/{{ total_tasks }}</h2>
+                    <small>Task completion rate</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Daily Reports</h6>
+                    <h2 class="mb-0">{{ reports_submitted }}</h2>
+                    <small>Reports submitted this month</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Activity -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for activity in recent_activities %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-{{ activity.type_color }}"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">{{ activity.title }}</h6>
+                                <p class="mb-0">{{ activity.description }}</p>
+                                <small class="text-muted">{{ activity.timestamp.strftime('%B %d, %Y %H:%M') }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Tasks -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Tasks</h5>
+                </div>
+                <div class="card-body">
+                    {% for task in current_tasks %}
+                    <div class="task-item mb-3">
+                        <h6 class="mb-1">{{ task.title }}</h6>
+                        <p class="small text-muted mb-1">Due: {{ task.due_date.strftime('%B %d, %Y') }}</p>
+                        <div class="progress">
+                            <div class="progress-bar bg-{{ task.status_color }}" 
+                                 style="width: {{ task.progress }}%">
+                                {{ task.progress }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="row">
+        <!-- Attendance Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Monthly Attendance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="attendanceChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Summary -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Reports Quality</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="reportsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Classes and Homework -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Homework Assignments</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Subject</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Submissions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for homework in recent_homework %}
+                        <tr>
+                            <td>{{ homework.title }}</td>
+                            <td>{{ homework.subject }}</td>
+                            <td>{{ homework.due_date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <span class="badge bg-{{ homework.status_color }}">
+                                    {{ homework.status }}
+                                </span>
+                            </td>
+                            <td>{{ homework.submission_count }}/{{ homework.total_students }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 5px;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 20px;
+    width: 1px;
+    height: calc(100% - 15px);
+    background-color: #dee2e6;
+}
+
+.task-item:not(:last-child) {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 1rem;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Attendance Chart
+    const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(attendanceCtx, {
+        type: 'line',
+        data: {
+            labels: {{ attendance_labels|tojson }},
+            datasets: [{
+                label: 'Attendance Rate',
+                data: {{ attendance_data|tojson }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Reports Quality Chart
+    const reportsCtx = document.getElementById('reportsChart').getContext('2d');
+    new Chart(reportsCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ report_labels|tojson }},
+            datasets: [{
+                label: 'Report Ratings',
+                data: {{ report_data|tojson }},
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 5
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

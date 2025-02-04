@@ -9,6 +9,11 @@ from app import db
 import os
 from werkzeug.utils import secure_filename
 from functools import wraps
+from datetime import datetime
+from datetime import timedelta
+from app.models.homework import Homework
+from app.models.homework import HomeworkSubmission
+from app.models.attendance import Attendance
 
 admin = Blueprint('admin', __name__)
 
@@ -33,27 +38,238 @@ def dashboard():
     total_messages = Message.query.count()
     teachers = User.query.filter_by(role='teacher').count()
     students = User.query.filter_by(role='student').count()
+    tasks = TeacherTask.query.order_by(TeacherTask.created_at.desc()).all()
+
+    # Task chart data preparation
+    task_data = {}
+    task_details = []
+    task_colors = []
+    task_border_colors = []
     
-    # Attendance stats
-    teachers_present = 0
-    
-    students_present = 0
-    
+    color_map = {
+        'high': 'rgba(220, 53, 69, 0.5)',
+        'medium': 'rgba(255, 193, 7, 0.5)',
+        'low': 'rgba(23, 162, 184, 0.5)'
+    }
+    border_color_map = {
+        'high': 'rgb(220, 53, 69)',
+        'medium': 'rgb(255, 193, 7)',
+        'low': 'rgb(23, 162, 184)'
+    }
+
+    # Group tasks by date
+    for task in tasks:
+        date_str = task.created_at.strftime('%Y-%m-%d')
+        if date_str not in task_data:
+            task_data[date_str] = {
+                'count': 0,
+                'details': []
+            }
+        task_data[date_str]['count'] += 1
+        task_data[date_str]['details'].append({
+            'priority': task.priority,
+            'due_date': task.due_date.strftime('%Y-%m-%d %H:%M'),
+            'title': task.title
+        })
+
+    # Sort dates and prepare final data
+    task_dates = sorted(task_data.keys())
+    task_counts = []
+    task_details = []
+    task_colors = []
+    task_border_colors = []
+
+    for date in task_dates:
+        task_counts.append(task_data[date]['count'])
+        task_details.append(task_data[date]['details'])
+        
+        # Get predominant priority if there are tasks
+        if task_data[date]['details']:
+            priorities = [d['priority'] for d in task_data[date]['details']]
+            predominant = max(set(priorities), key=priorities.count)
+        else:
+            predominant = 'medium'
+            
+        task_colors.append(color_map[predominant])
+        task_border_colors.append(border_color_map[predominant])
+
+    # Format dates for display
+    display_dates = [datetime.strptime(date, '%Y-%m-%d').strftime('%b %d') for date in task_dates]
+
     return render_template('admin/dashboard.html',
                          reports=reports,
                          unread_messages=unread_messages,
                          total_messages=total_messages,
                          teachers=teachers,
                          students=students,
-                         teachers_present=teachers_present,
-                         students_present=students_present)
-
+                         teachers_present=0,
+                         students_present=0,
+                         tasks=tasks,
+                         # Chart data
+                         task_dates=display_dates,
+                         task_counts=task_counts,
+                         task_colors=task_colors,
+                         task_border_colors=task_border_colors,
+                         task_details=task_details)
 @admin.route('/admin/reports')
 @login_required
 @admin_required
 def view_reports():
     reports = DailyReport.query.order_by(DailyReport.date.desc()).all()
     return render_template('admin/reports.html', reports=reports)
+
+@admin.route('/admin/teacher/<int:teacher_id>/profile')
+@login_required
+@admin_required
+def teacher_profile(teacher_id):
+    # Get teacher info
+    teacher = User.query.filter_by(id=teacher_id, role='teacher').first_or_404()
+    
+    # Calculate attendance rate
+    thirty_days_ago = datetime.now() - timedelta(days=30)
+    attendance_records = Attendance.query.filter(
+        Attendance.user_id == teacher_id,
+        Attendance.date >= thirty_days_ago
+    ).all()
+    
+    present_count = len([a for a in attendance_records if a.status == 'present'])
+    attendance_rate = (present_count / 30) * 100 if attendance_records else 0
+    
+    # Get task statistics
+    tasks = TeacherTask.query.filter_by(assigned_to=teacher_id).all()
+    completed_tasks = len([t for t in tasks if t.status == 'completed'])
+    total_tasks = len(tasks)
+    
+    # Get reports statistics
+    this_month = datetime.now().replace(day=1)
+    reports = DailyReport.query.filter(
+        DailyReport.teacher_id == teacher_id,
+        DailyReport.date >= this_month
+    ).all()
+    reports_submitted = len(reports)
+    
+    # Get recent activities (combine attendance, tasks, reports)
+    recent_activities = []
+    
+    # Add attendance activities
+    for record in attendance_records[:5]:
+        recent_activities.append({
+            'title': 'Attendance',
+            'description': f'Marked as {record.status}',
+            'timestamp': record.created_at,
+            'type_color': 'success' if record.status == 'present' else 'warning'
+        })
+    
+    # Add task activities
+    for task in tasks[:5]:
+        recent_activities.append({
+            'title': 'Task',
+            'description': f"{task.title} - {task.status}",
+            'timestamp': task.completed_at or task.created_at,
+            'type_color': 'info'
+        })
+    
+    # Add report activities
+    for report in reports[:5]:
+        recent_activities.append({
+            'title': 'Daily Report',
+            'description': f"Submitted daily report with rating {report.cleanliness_rating}",
+            'timestamp': report.date,
+            'type_color': 'primary'
+        })
+    
+    # Sort activities by timestamp
+    recent_activities.sort(key=lambda x: x['timestamp'], reverse=True)
+    recent_activities = recent_activities[:10]  # Keep only 10 most recent
+    
+    # Get current tasks
+    current_tasks = TeacherTask.query.filter_by(
+        assigned_to=teacher_id,
+        status='pending'
+    ).order_by(TeacherTask.due_date.asc()).limit(5).all()
+    
+    # Process tasks for display
+    processed_tasks = []
+    for task in current_tasks:
+        total_time = (task.due_date - task.created_at).total_seconds()
+        time_left = (task.due_date - datetime.now()).total_seconds()
+        progress = min(100, max(0, ((total_time - time_left) / total_time) * 100))
+        
+        processed_tasks.append({
+            'title': task.title,
+            'due_date': task.due_date,
+            'progress': round(progress, 1),
+            'status_color': 'danger' if progress > 75 else 'warning' if progress > 50 else 'info'
+        })
+    
+    # Get homework data
+    recent_homework = Homework.query.filter_by(teacher_id=teacher_id)\
+        .order_by(Homework.created_at.desc()).limit(5).all()
+    
+    # Process homework for display
+    processed_homework = []
+    for hw in recent_homework:
+        submissions = HomeworkSubmission.query.filter_by(homework_id=hw.id).count()
+        total_students = User.query.filter_by(role='student').count()
+        
+        processed_homework.append({
+            'title': hw.title,
+            'subject': hw.subject.value,
+            'due_date': hw.due_date,
+            'status': 'Active' if hw.due_date > datetime.now() else 'Expired',
+            'status_color': 'success' if hw.due_date > datetime.now() else 'danger',
+            'submission_count': submissions,
+            'total_students': total_students
+        })
+    
+    # Prepare chart data for attendance
+    attendance_labels = []
+    attendance_data = []
+    
+    for i in range(30, 0, -1):
+        date = datetime.now() - timedelta(days=i)
+        attendance_labels.append(date.strftime('%Y-%m-%d'))
+        
+        record = Attendance.query.filter_by(
+            user_id=teacher_id,
+            date=date.date()
+        ).first()
+        
+        # Calculate attendance percentage for that day
+        if record and record.status == 'present':
+            attendance_data.append(100)
+        elif record and record.status == 'late':
+            attendance_data.append(50)
+        else:
+            attendance_data.append(0)
+    
+    # Prepare chart data for reports quality
+    report_labels = []
+    report_data = []
+    
+    last_10_reports = DailyReport.query.filter_by(teacher_id=teacher_id)\
+        .order_by(DailyReport.date.desc()).limit(10).all()
+    
+    for report in reversed(last_10_reports):
+        report_labels.append(report.date.strftime('%Y-%m-%d'))
+        report_data.append(report.cleanliness_rating or 0)
+    
+    return render_template(
+        'admin/teacher_profile.html',
+        teacher=teacher,
+        attendance_rate=attendance_rate,
+        completed_tasks=completed_tasks,
+        total_tasks=total_tasks,
+        reports_submitted=reports_submitted,
+        recent_activities=recent_activities,
+        current_tasks=processed_tasks,
+        recent_homework=processed_homework,
+        attendance_labels=attendance_labels,
+        attendance_data=attendance_data,
+        report_labels=report_labels,
+        report_data=report_data
+    )
+
 
 @admin.route('/admin/assignments', methods=['GET', 'POST'])
 @login_required
