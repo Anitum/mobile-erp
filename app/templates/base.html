@@ -60,11 +60,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-    				<a class="nav-link {% if request.endpoint == 'admin.manage_tasks' %}active{% endif %}" 
-       				   href="{{ url_for('admin.manage_tasks') }}">
-        			    <i class="fas fa-tasks me-1"></i>Tasks
-    				</a>
-			    </li>
+    				            <a class="nav-link {% if request.endpoint == 'admin.manage_tasks' %}active{% endif %}" 
+       				               href="{{ url_for('admin.manage_tasks') }}">
+        			                <i class="fas fa-tasks me-1"></i>Tasks
+    				            </a>
+			                </li>
                             <li class="nav-item">
                                 <a class="nav-link {% if request.endpoint == 'admin.messages' %}active{% endif %}" 
                                    href="{{ url_for('admin.messages') }}">
@@ -98,6 +98,12 @@
                                 <a class="nav-link {% if request.endpoint == 'teacher.homework' %}active{% endif %}" 
                                    href="{{ url_for('teacher.homework') }}">
                                     <i class="fas fa-book me-1"></i>Homework
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'teacher.view_tasks' %}active{% endif %}" 
+                                   href="{{ url_for('teacher.view_tasks') }}">
+                                    <i class="fas fa-tasks me-1"></i>Tasks
                                 </a>
                             </li>
                             <li class="nav-item">
