@@ -270,7 +270,6 @@ def teacher_profile(teacher_id):
         report_data=report_data
     )
 
-
 @admin.route('/admin/assignments', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -282,17 +281,16 @@ def assignments():
         assigned_to = request.form.get('assigned_to')
         file = request.files.get('file')
 
-    if file:
-        filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"{timestamp}_{filename}"
-        # Store only the filename, not the full path
-        file_path = filename
-        # Use full path only for saving
-        full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(full_path)
-    else:
         file_path = None
+        if file:
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{timestamp}_{filename}"
+            # Store only the filename, not the full path
+            file_path = filename
+            # Use full path only for saving
+            full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            file.save(full_path)
 
         assignment = AdminAssignment(
             title=title,
@@ -308,7 +306,6 @@ def assignments():
 
     assignments = AdminAssignment.query.order_by(AdminAssignment.date_posted.desc()).all()
     return render_template('admin/assignments.html', assignments=assignments)
-
 @admin.route('/admin/messages', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -463,7 +460,39 @@ def all_attendance():
     attendances = Attendance.query.order_by(Attendance.date.desc()).all()
     return render_template('admin/all_attendance.html', attendances=attendances)
 
+@admin.route('/api/weekly-attendance')
+@login_required
+@admin_required
+def weekly_attendance_data():
+    # Get the dates for the current week (Monday to Friday)
+    today = datetime.now().date()
+    monday = today - timedelta(days=today.weekday())
+    dates = [monday + timedelta(days=i) for i in range(5)]  # Monday to Friday
 
+    attendance_data = {
+        'labels': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        'presentData': [],
+        'absentData': []
+    }
+
+    for date in dates:
+        # Get all users
+        total_users = User.query.filter(User.role.in_(['teacher', 'student'])).count()
+        
+        # Get attendance for this date
+        present_count = Attendance.query.filter(
+            Attendance.date == date,
+            Attendance.status.in_(['present', 'late'])
+        ).count()
+        
+        # Calculate percentages
+        present_percentage = round((present_count / total_users * 100) if total_users > 0 else 0, 1)
+        absent_percentage = round(100 - present_percentage, 1)
+        
+        attendance_data['presentData'].append(present_percentage)
+        attendance_data['absentData'].append(absent_percentage)
+
+    return jsonify(attendance_data)
 
 @admin.route('/tasks', methods=['GET', 'POST'])
 @login_required
