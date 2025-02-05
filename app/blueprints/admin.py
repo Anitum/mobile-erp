@@ -282,12 +282,17 @@ def assignments():
         assigned_to = request.form.get('assigned_to')
         file = request.files.get('file')
 
-        if file:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-            file_path = filename
-        else:
-            file_path = None
+    if file:
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}_{filename}"
+        # Store only the filename, not the full path
+        file_path = filename
+        # Use full path only for saving
+        full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        file.save(full_path)
+    else:
+        file_path = None
 
         assignment = AdminAssignment(
             title=title,
