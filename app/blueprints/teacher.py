@@ -10,6 +10,9 @@ import os
 from functools import wraps
 from app.models.homework import SubjectEnum
 import json
+from flask import render_template, jsonify, request
+import pytz
+from pytz import timezone
 
 from app.models.report import DailyReport  # Import the DailyReport model
 from datetime import datetime
@@ -28,8 +31,6 @@ def teacher_required(f):
 
 
 # routes/teacher.py
-from flask import render_template, jsonify, request
-from datetime import datetime
 
 @teacher.route('/teacher/dashboard')
 @login_required
@@ -41,7 +42,7 @@ def dashboard():
         'absent': [5, 8, 12, 7, 10]       # Replace with actual data
     }    
     today_attendance = Attendance.get_today_attendance(current_user.id)
-    today_date = datetime.now()
+    today_date = datetime.now(pytz.timezone('Asia/Kolkata'))
     attendance_history = Attendance.query.filter_by(
         user_id=current_user.id
     ).order_by(Attendance.date.desc()).limit(10).all()
@@ -55,13 +56,34 @@ def dashboard():
 @login_required
 @teacher_required
 def check_in():
-    location = request.form.get('location')
-    attendance = Attendance.mark_check_in(current_user.id, location)
-    return jsonify({
-        'status': 'success',
-        'check_in_time': attendance.check_in_time.strftime('%I:%M %p')
-    })
+    try:
+        location = request.form.get('location')
+        if not location:
+            return jsonify({
+                'status': 'error',
+                'message': 'Location data is required'
+            }), 400
 
+        attendance = Attendance.mark_check_in(current_user.id, location)
+        
+        if attendance and attendance.check_in_time:
+            return jsonify({
+                'status': 'success',
+                'check_in_time': attendance.check_in_time.strftime('%I:%M %p'),
+                'message': 'Successfully checked in'
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to mark attendance'
+            }), 400
+            
+    except Exception as e:
+        current_app.logger.error(f"Check-in error: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 @teacher.route('/teacher/check-out', methods=['POST'])
 @login_required
 @teacher_required

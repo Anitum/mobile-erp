@@ -109,7 +109,7 @@
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 Current Time</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="currentTime">
-                                Loading...
+                                <!-- Time will be updated here -->
                             </div>
                         </div>
                         <div class="col-auto">
@@ -198,8 +198,7 @@
                                 {% if today_attendance and today_attendance.check_in_time %}
                                     <div class="alert alert-success">
                                         <i class="fas fa-check-circle"></i>
-                                        Checked in at {{ today_attendance.check_in_time.strftime('%I:%M %p') }}
-                                        <br>
+                                        Checked in at {{ today_attendance.get_formatted_check_in_time if today_attendance else '-' }}                                        <br>
                                         <small>Location: {{ today_attendance.check_in_location or 'Not recorded' }}</small>
                                     </div>
                                 {% else %}
@@ -218,12 +217,11 @@
                             <div class="text-center mb-4">
                                 <h4 class="text-primary">Check Out</h4>
                                 {% if today_attendance and today_attendance.check_out_time %}
-                                    <div class="alert alert-success">
-                                        <i class="fas fa-check-circle"></i>
-                                        Checked out at {{ today_attendance.check_out_time.strftime('%I:%M %p') }}
-                                        <br>
-                                        <small>Location: {{ today_attendance.check_out_location or 'Not recorded' }}</small>
-                                    </div>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    Checked in at {{ today_attendance.formatted_check_in_time if today_attendance else '-' }}                                    <br>
+                                    <small>Location: {{ today_attendance.check_in_location or 'Not recorded' }}</small>
+                                </div>
                                 {% elif today_attendance and today_attendance.check_in_time %}
                                     <button id="checkOutBtn" class="btn btn-primary btn-lg">
                                         <i class="fas fa-sign-out-alt mr-2"></i>Mark Check Out
@@ -376,6 +374,7 @@
 {% block scripts %}
 <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<script src="{{ url_for('static', filename='components/CurrentTime.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize DataTable
@@ -399,8 +398,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-    setInterval(updateTime, 1000);
     updateTime();
+    setInterval(updateTime, 1000);
+
 
     // Attendance marking functions
     function getLocation(callback) {
@@ -443,33 +443,42 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check In Button
     const checkInBtn = document.getElementById('checkInBtn');
     if (checkInBtn) {
-        checkInBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            showSpinner('checkInBtn', 'checkInSpinner');
-            getLocation(location => {
-                fetch('/teacher/check-in', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `location=${encodeURIComponent(location)}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        window.location.reload();
-                    } else {
-                        alert('Failed to check in. Please try again.');
-                        hideSpinner('checkInBtn', 'checkInSpinner');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
-                    hideSpinner('checkInBtn', 'checkInSpinner');
-                });
-            });
+        // Modify the check-in event listener to include better error handling
+    checkInBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    showSpinner('checkInBtn', 'checkInSpinner');
+    
+    getLocation(location => {
+        console.log('Getting location:', location); // Debug log
+        // Add this before the fetch call
+        fetch('/teacher/check-in', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content // Add CSRF token if using Flask-WTF
+            },
+            body: `location=${encodeURIComponent(location)}`
+        })
+        .then(response => {
+            console.log('Response status:', response.status); // Debug log
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data); // Debug log
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Failed to check in: ' + (data.message || 'Please try again.'));
+                hideSpinner('checkInBtn', 'checkInSpinner');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+            hideSpinner('checkInBtn', 'checkInSpinner');
         });
+    });
+});
     }
     
     // Check Out Button

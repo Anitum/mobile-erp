@@ -7,3 +7,5 @@ python-dotenv==1.0.0
 SQLAlchemy==2.0.20
 pytest>=7.0.0
 pytest-cov>=4.0.0
+pytz==2024.1
+Flask-WTF

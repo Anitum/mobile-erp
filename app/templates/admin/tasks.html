@@ -58,6 +58,20 @@
                                         </span>
                                     </td>
                                     <td>
+                                        <div id="task-viewer-{{ task.id }}"></div>
+                                        {% if task.task_file %}
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                const container = document.getElementById('task-viewer-{{ task.id }}');
+                                                ReactDOM.createRoot(container).render(
+                                                    React.createElement(AdminTaskViewer, {
+                                                        taskFile: {{ task.task_file|tojson|safe }}
+                                                    })
+                                                );
+                                            });
+                                        </script>
+                                        {% endif %}
+                                    </td>                                    <td>
                                         <button class="btn btn-sm btn-info" onclick="viewTaskDetails({{ task.id }})">
                                             <i class="fas fa-eye"></i>
                                         </button>

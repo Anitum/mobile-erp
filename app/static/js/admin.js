@@ -1,3 +1,16 @@
+import WeeklyAttendanceChart from '../components/charts/WeeklyAttendanceChart';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the chart
+    const chartContainer = document.getElementById('weeklyAttendanceChart');
+    if (chartContainer) {
+        ReactDOM.render(
+            React.createElement(WeeklyAttendanceChart),
+            chartContainer
+        );
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // File Upload Preview
     const fileInputs = document.querySelectorAll('input[type="file"]');

@@ -14,6 +14,7 @@ from datetime import timedelta
 from app.models.homework import Homework
 from app.models.homework import HomeworkSubmission
 from app.models.attendance import Attendance
+from pytz import timezone
 
 admin = Blueprint('admin', __name__)
 
@@ -36,15 +37,105 @@ def dashboard():
     reports = DailyReport.query.order_by(DailyReport.date.desc()).limit(5).all()
     unread_messages = Message.query.filter_by(receiver_id=current_user.id, is_read=False).count()
     total_messages = Message.query.count()
-    teachers = User.query.filter_by(role='teacher').count()
-    students = User.query.filter_by(role='student').count()
     tasks = TeacherTask.query.order_by(TeacherTask.created_at.desc()).all()
+    total_teachers = User.query.filter_by(role='teacher').count()
+    total_students = User.query.filter_by(role='student').count()
+    weekly_stats = Attendance.get_weekly_attendance_stats()
+    teachers_present = Attendance.query.join(
+        User, 
+        User.id == Attendance.user_id
+    ).filter(
+        Attendance.date == today,
+        Attendance.status == 'present',
+        User.role == 'teacher'
+    ).count()
 
+    students_present = Attendance.query.join(
+        User,
+        User.id == Attendance.user_id
+    ).filter(
+        Attendance.date == today,
+        Attendance.status == 'present',
+        User.role == 'student'
+    ).count()
+
+    unread_reports = DailyReport.query.filter_by(status='pending').count()
+    unread_reports_list = DailyReport.query.filter_by(status='pending')\
+        .order_by(DailyReport.date.desc())\
+        .limit(5)\
+        .all()
+
+    # Get today's teacher attendance for the table
+    teacher_attendance = db.session.query(
+        Attendance,
+        db.func.concat(User.first_name, ' ', User.last_name).label('teacher_name'),
+        User.id.label('teacher_id')
+    ).join(
+        User,
+        User.id == Attendance.user_id
+    ).filter(
+        Attendance.date == today,
+        User.role == 'teacher'
+    ).all()
+
+    chart_data = {
+        'labels': [stat['date_label'] for stat in weekly_stats],
+        'datasets': [
+            {
+                'present': [stat['present'] for stat in weekly_stats],
+                'absent': [stat['absent'] for stat in weekly_stats],
+                'late': [stat['late'] for stat in weekly_stats],
+            }
+        ],
+        'details': [
+            {
+                'date': stat['date'].isoformat(),
+                'day': stat['day_name'],
+                'present_count': stat['present_count'],
+                'absent_count': stat['absent_count'],
+                'late_count': stat['late_count'],
+                'total': stat['total']
+            } for stat in weekly_stats
+        ]
+    }
+    
+
+    # Process teacher attendance for display
+    teacher_attendance_list = []
+    for record in teacher_attendance:
+        teacher_attendance_list.append({
+            'teacher_id': record.teacher_id,
+            'teacher_name': record.teacher_name,
+            'check_in_time': record.Attendance.check_in_time,
+            'is_late': record.Attendance.status == 'late'
+        })
+
+    weekly_labels = []
+    weekly_present_data = []
+    weekly_absent_data = []
+
+    for i in range(7):
+        date = today - timedelta(days=i)
+        weekly_labels.append(date.strftime('%a'))
+        
+        total = User.query.count()
+        present = Attendance.query.filter(
+            Attendance.date == date,
+            Attendance.status == 'present'
+        ).count()
+        
+        present_percentage = (present / total * 100) if total > 0 else 0
+        absent_percentage = 100 - present_percentage
+        
+        weekly_present_data.append(present_percentage)
+        weekly_absent_data.append(absent_percentage)
+    
+    weekly_labels.reverse()
+    weekly_present_data.reverse()
+    weekly_absent_data.reverse()
+    
     # Task chart data preparation
     task_data = {}
-    task_details = []
-    task_colors = []
-    task_border_colors = []
     
     color_map = {
         'high': 'rgba(220, 53, 69, 0.5)',
@@ -97,20 +188,28 @@ def dashboard():
     display_dates = [datetime.strptime(date, '%Y-%m-%d').strftime('%b %d') for date in task_dates]
 
     return render_template('admin/dashboard.html',
+                         teacher_attendance=teacher_attendance_list,  # Make sure this is passed
+                         total_teachers=total_teachers,
+                         total_students=total_students,
+                         teachers_present=teachers_present,
+                         students_present=students_present,
+                         unread_reports=unread_reports,
+                         unread_reports_list=unread_reports_list,
+                         weekly_labels=weekly_labels,
+                         weekly_present_data=weekly_present_data,
+                         weekly_absent_data=weekly_absent_data,
                          reports=reports,
                          unread_messages=unread_messages,
                          total_messages=total_messages,
-                         teachers=teachers,
-                         students=students,
-                         teachers_present=0,
-                         students_present=0,
                          tasks=tasks,
-                         # Chart data
                          task_dates=display_dates,
                          task_counts=task_counts,
                          task_colors=task_colors,
                          task_border_colors=task_border_colors,
-                         task_details=task_details)
+                         task_details=task_details,
+                         chart_data=chart_data
+                         )
+
 @admin.route('/admin/reports')
 @login_required
 @admin_required
@@ -267,8 +366,10 @@ def teacher_profile(teacher_id):
         attendance_labels=attendance_labels,
         attendance_data=attendance_data,
         report_labels=report_labels,
-        report_data=report_data
+        report_data=report_data,
     )
+
+
 
 @admin.route('/admin/assignments', methods=['GET', 'POST'])
 @login_required
@@ -348,6 +449,20 @@ from datetime import datetime, timedelta
 from app.models.attendance import Attendance
 from app.models.user import User
 
+@admin.route('/admin/task-file/<filename>')
+@login_required
+@admin_required
+def view_task_file(filename):
+    try:
+        return send_from_directory(
+            current_app.config['UPLOAD_FOLDER'],
+            filename,
+            as_attachment=False
+        )
+    except FileNotFoundError:
+        flash('File not found', 'error')
+        return redirect(url_for('admin.manage_tasks'))
+
 @admin.route('/admin/attendance')
 @login_required
 @admin_required
@@ -414,6 +529,21 @@ def user_attendance(user_id):
                              'absent_days': absent_days,
                              'late_days': late_days
                          })
+@admin.route('/api/weekly-attendance')
+@login_required
+@admin_required
+def get_weekly_attendance():
+    try:
+        weekly_stats = Attendance.get_weekly_attendance_stats()
+        return jsonify({
+            'success': True,
+            'data': weekly_stats
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @admin.route('/admin/attendance/mark', methods=['POST'])
 @login_required
@@ -460,39 +590,7 @@ def all_attendance():
     attendances = Attendance.query.order_by(Attendance.date.desc()).all()
     return render_template('admin/all_attendance.html', attendances=attendances)
 
-@admin.route('/api/weekly-attendance')
-@login_required
-@admin_required
-def weekly_attendance_data():
-    # Get the dates for the current week (Monday to Friday)
-    today = datetime.now().date()
-    monday = today - timedelta(days=today.weekday())
-    dates = [monday + timedelta(days=i) for i in range(5)]  # Monday to Friday
 
-    attendance_data = {
-        'labels': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        'presentData': [],
-        'absentData': []
-    }
-
-    for date in dates:
-        # Get all users
-        total_users = User.query.filter(User.role.in_(['teacher', 'student'])).count()
-        
-        # Get attendance for this date
-        present_count = Attendance.query.filter(
-            Attendance.date == date,
-            Attendance.status.in_(['present', 'late'])
-        ).count()
-        
-        # Calculate percentages
-        present_percentage = round((present_count / total_users * 100) if total_users > 0 else 0, 1)
-        absent_percentage = round(100 - present_percentage, 1)
-        
-        attendance_data['presentData'].append(present_percentage)
-        attendance_data['absentData'].append(absent_percentage)
-
-    return jsonify(attendance_data)
 
 @admin.route('/tasks', methods=['GET', 'POST'])
 @login_required
@@ -540,4 +638,6 @@ def manage_tasks():
 
     teachers = User.query.filter_by(role='teacher').all()
     tasks = TeacherTask.query.order_by(TeacherTask.created_at.desc()).all()
+
+    
     return render_template('admin/tasks.html', teachers=teachers, tasks=tasks)

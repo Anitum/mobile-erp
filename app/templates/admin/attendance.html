@@ -99,8 +99,8 @@
                                     <span class="badge bg-secondary">Not marked</span>
                                 {% endif %}
                             </td>
-                            <td>{{ attendance.check_in_time.strftime('%H:%M') if attendance and attendance.check_in_time else '-' }}</td>
-                            <td>{{ attendance.check_out_time.strftime('%H:%M') if attendance and attendance.check_out_time else '-' }}</td>
+                            <td>{{ attendance.formatted_check_in_time if attendance else '-' }}</td>
+                            <td>{{ attendance.formatted_check_out_time if attendance else '-' }}</td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-primary" 
                                         data-bs-toggle="modal" 
