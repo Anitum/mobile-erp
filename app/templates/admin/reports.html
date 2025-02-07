@@ -4,69 +4,290 @@
 <div class="container">
     <h1 class="mb-4">Teacher Reports</h1>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <div class="row">
-                <div class="col">
-                    <h5 class="mb-0">Filter Reports</h5>
+    <!-- Statistics Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Reports</h5>
+                    <p class="display-4">{{ stats.total_reports }}</p>
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Average Cleanliness</h5>
+                    <p class="display-4">{{ stats.average_cleanliness }}/5</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Reviews</h5>
+                    <p class="display-4">{{ stats.pending_reports }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filter Reports</h5>
+        </div>
         <div class="card-body">
-            <form class="row g-3">
+            <form class="row g-3" method="GET">
                 <div class="col-md-4">
-                    <label class="form-label">Date Range</label>
-                    <input type="date" class="form-control" name="start_date">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date" 
+                           value="{{ current_filters.start_date }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">To</label>
-                    <input type="date" class="form-control" name="end_date">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date" 
+                           value="{{ current_filters.end_date }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Status</label>
                     <select class="form-control" name="status">
                         <option value="">All</option>
-                        <option value="pending">Pending</option>
-                        <option value="reviewed">Reviewed</option>
+                        <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>
+                            Pending
+                        </option>
+                        <option value="reviewed" {% if current_filters.status == 'reviewed' %}selected{% endif %}>
+                            Reviewed
+                        </option>
                     </select>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{{ url_for('admin.view_reports') }}" class="btn btn-secondary">Reset</a>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Reports List -->
     <div class="reports-list">
         {% for report in reports %}
-        <div class="card mb-3">
+        <div class="card mb-4">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Report #{{ report.id }}</h5>
+                    <div>
+                        <h5 class="mb-0">Report from {{ report.teacher_name }}</h5>
+                        <small class="text-muted">Submitted on {{ report.date.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
                     <span class="badge {% if report.status == 'pending' %}bg-warning{% else %}bg-success{% endif %}">
-                        {{ report.status }}
+                        {{ report.status | title }}
                     </span>
                 </div>
             </div>
+            
             <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">
-                    Submitted on {{ report.formatted_date() }}
-                </h6>
-                <p class="card-text">{{ report.content }}</p>
-                {% if report.file_path %}
-                <a href="{{ url_for('static', filename=report.file_path) }}" 
-                class="btn btn-sm btn-outline-primary" target="_blank">
-                    View Attachment
-                </a>
-                {% endif %}
+                <!-- Cleanliness Assessment -->
+                <div class="cleanliness-assessment mb-4">
+                    <h6 class="border-bottom pb-2">Cleanliness Assessment</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="overall-rating text-center mb-3">
+                                <h5>Overall Rating</h5>
+                                <div class="display-4 text-primary">{{ report.cleanliness_rating }}/5</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="components-summary">
+                                <h5 class="text-center mb-3">Component Ratings</h5>
+                                <div class="list-group">
+                                    {% for component in report.components %}
+                                    {% set details = report.component_details[component] %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>{{ component | title }}</strong>
+                                            <div>
+                                                {% if details.rating %}
+                                                    <span class="badge bg-primary">{{ details.rating }}/5</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Not Rated</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% if details.remarks %}
+                                        <small class="text-muted d-block mt-1">{{ details.remarks }}</small>
+                                        {% endif %}
+                                        {% if details.photo %}
+                                        <button class="btn btn-sm btn-outline-primary mt-1" 
+                                                onclick="showPhoto('{{ url_for('static', filename=details.photo) }}')">
+                                            <i class="fas fa-image"></i> View Photo
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overall Report -->
+                <div class="overall-report">
+                    <h6 class="border-bottom pb-2">Overall Report</h6>
+                    <p class="card-text">{{ report.content }}</p>
+                    {% if report.file_path %}
+                    <div class="attachments mt-3">
+                        <h6>Attachments</h6>
+                        <a href="{{ url_for('static', filename=report.file_path) }}" 
+                           class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="fas fa-paperclip"></i> View Attachment
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
+
             <div class="card-footer">
-                <button class="btn btn-success btn-sm mark-reviewed" data-report-id="{{ report.id }}">
-                    Mark as Reviewed
+                <button class="btn btn-sm {% if report.status == 'pending' %}btn-success{% else %}btn-secondary{% endif %} toggle-status"
+                        data-report-id="{{ report.id }}"
+                        data-current-status="{{ report.status }}">
+                    {% if report.status == 'pending' %}
+                        Mark as Reviewed
+                    {% else %}
+                        Mark as Pending
+                    {% endif %}
                 </button>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+
+<!-- Photo Preview Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Photo Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Component Photo" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.cleanliness-assessment {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.list-group-item {
+    transition: all 0.2s ease-in-out;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.overall-rating .display-4 {
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+.badge {
+    font-size: 0.9rem;
+    padding: 0.5em 0.8em;
+}
+
+.components-summary .list-group-item {
+    border-left: 4px solid #0d6efd;
+}
+
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#modalImage {
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+@media (max-width: 768px) {
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .badge {
+        margin-top: 0.5rem;
+    }
+    
+    .components-summary {
+        margin-top: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize photo modal
+const photoModal = new bootstrap.Modal(document.getElementById('photoModal'));
+const modalImage = document.getElementById('modalImage');
+
+function showPhoto(url) {
+    modalImage.src = url;
+    photoModal.show();
+}
+
+// Handle status toggle
+document.querySelectorAll('.toggle-status').forEach(button => {
+    button.addEventListener('click', async function() {
+        const reportId = this.dataset.reportId;
+        const currentStatus = this.dataset.currentStatus;
+        
+        try {
+            const response = await fetch(`/admin/reports/${reportId}/toggle-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update button text and status
+                this.textContent = data.new_status === 'pending' ? 'Mark as Reviewed' : 'Mark as Pending';
+                this.dataset.currentStatus = data.new_status;
+                
+                // Update status badge
+                const badge = this.closest('.card').querySelector('.badge');
+                badge.classList.remove('bg-warning', 'bg-success');
+                badge.classList.add(data.new_status === 'pending' ? 'bg-warning' : 'bg-success');
+                badge.textContent = data.new_status.charAt(0).toUpperCase() + data.new_status.slice(1);
+                
+                // Update button styling
+                this.classList.remove('btn-success', 'btn-secondary');
+                this.classList.add(data.new_status === 'pending' ? 'btn-success' : 'btn-secondary');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to update status. Please try again.');
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -198,7 +198,7 @@
                                 {% if today_attendance and today_attendance.check_in_time %}
                                     <div class="alert alert-success">
                                         <i class="fas fa-check-circle"></i>
-                                        Checked in at {{ today_attendance.get_formatted_check_in_time if today_attendance else '-' }}                                        <br>
+                                        Checked in <!--at {{ today_attendance.get_formatted_check_in_time if today_attendance else '-' }}    -->                                    <br>
                                         <small>Location: {{ today_attendance.check_in_location or 'Not recorded' }}</small>
                                     </div>
                                 {% else %}
@@ -219,7 +219,7 @@
                                 {% if today_attendance and today_attendance.check_out_time %}
                                 <div class="alert alert-success">
                                     <i class="fas fa-check-circle"></i>
-                                    Checked in at {{ today_attendance.formatted_check_in_time if today_attendance else '-' }}                                    <br>
+                                    Checked out <!--at {{ today_attendance.formatted_check_in_time if today_attendance else '-' }}        -->                            <br>
                                     <small>Location: {{ today_attendance.check_in_location or 'Not recorded' }}</small>
                                 </div>
                                 {% elif today_attendance and today_attendance.check_in_time %}

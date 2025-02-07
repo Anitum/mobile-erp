@@ -473,7 +473,9 @@ def complete_task(task_id):
         filename = f"{timestamp}_{filename}"
         file_path = os.path.join('uploads', filename)
         full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        
+        completion_image.save(full_path)
+        task.completion_image = file_path    
+            
         try:
             completion_image.save(full_path)
             task.completion_image = file_path

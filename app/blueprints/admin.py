@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
+from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
 from flask_login import login_required, current_user
 from app.models.user import User
 from app.models.report import DailyReport
@@ -214,8 +214,148 @@ def dashboard():
 @login_required
 @admin_required
 def view_reports():
-    reports = DailyReport.query.order_by(DailyReport.date.desc()).all()
-    return render_template('admin/reports.html', reports=reports)
+    # Get filter parameters
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    status = request.args.get('status')
+    
+    # Base query
+    reports_query = DailyReport.query
+    
+    # Apply filters if provided
+    if start_date:
+        reports_query = reports_query.filter(DailyReport.date >= datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        reports_query = reports_query.filter(DailyReport.date <= datetime.strptime(end_date, '%Y-%m-%d'))
+    if status:
+        reports_query = reports_query.filter(DailyReport.status == status)
+    
+    # Get reports with teacher information
+    reports = reports_query.join(
+        User, User.id == DailyReport.teacher_id
+    ).add_columns(
+        User.first_name,
+        User.last_name
+    ).order_by(DailyReport.date.desc()).all()
+    
+    # Process reports for display
+    processed_reports = []
+    for report, first_name, last_name in reports:
+        # Calculate average cleanliness rating
+        cleanliness_components = [
+            'floor', 'bench', 'whiteboard', 'door', 'walls', 'dustbin'
+        ]
+        
+        ratings = []
+        component_details = {}
+        
+        for component in cleanliness_components:
+            rating = getattr(report, f'{component}_rating', None)
+            photo = getattr(report, f'{component}_photo', None)
+            remarks = getattr(report, f'{component}_remarks', None)
+            
+            if rating:
+                ratings.append(rating)
+            
+            component_details[component] = {
+                'rating': rating,
+                'photo': photo,
+                'remarks': remarks
+            }
+        
+        avg_rating = sum(ratings) / len(ratings) if ratings else 0
+        
+        # Format report data
+        processed_report = {
+            'id': report.id,
+            'teacher_name': f"{first_name} {last_name}",
+            'date': report.date,
+            'content': report.content,
+            'status': report.status,
+            'cleanliness_rating': report.cleanliness_rating,
+            'average_component_rating': round(avg_rating, 2),
+            'component_details': component_details,
+            'file_path': report.file_path,
+            'components': cleanliness_components  # Pass list of components for iteration in template
+        }
+        
+        processed_reports.append(processed_report)
+    
+    # Calculate overall statistics
+    total_reports = len(processed_reports)
+    avg_cleanliness = sum(r['cleanliness_rating'] or 0 for r in processed_reports) / total_reports if total_reports > 0 else 0
+    pending_reports = sum(1 for r in processed_reports if r['status'] == 'pending')
+    
+    stats = {
+        'total_reports': total_reports,
+        'average_cleanliness': round(avg_cleanliness, 2),
+        'pending_reports': pending_reports
+    }
+    
+    return render_template(
+        'admin/reports.html',
+        reports=processed_reports,
+        stats=stats,
+        current_filters={
+            'start_date': start_date,
+            'end_date': end_date,
+            'status': status
+        }
+    )
+
+@admin.route('/admin/reports/<int:report_id>/toggle-status', methods=['POST'])
+@login_required
+@admin_required
+def toggle_report_status(report_id):
+    report = DailyReport.query.get_or_404(report_id)
+    report.status = 'reviewed' if report.status == 'pending' else 'pending'
+    db.session.commit()
+    return jsonify({
+        'success': True,
+        'new_status': report.status
+    })
+
+@admin.route('/admin/reports/statistics')
+@login_required
+@admin_required
+def get_report_statistics():
+    """API endpoint for report statistics"""
+    # Get date range
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    query = DailyReport.query
+    
+    if start_date:
+        query = query.filter(DailyReport.date >= datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        query = query.filter(DailyReport.date <= datetime.strptime(end_date, '%Y-%m-%d'))
+    
+    reports = query.all()
+    
+    # Calculate statistics for each component
+    components = ['floor', 'bench', 'whiteboard', 'door', 'walls', 'dustbin']
+    component_stats = {}
+    
+    for component in components:
+        ratings = [getattr(report, f'{component}_rating', 0) for report in reports if getattr(report, f'{component}_rating', 0)]
+        
+        component_stats[component] = {
+            'average': round(sum(ratings) / len(ratings), 2) if ratings else 0,
+            'total_ratings': len(ratings),
+            'distribution': {
+                '5': ratings.count(5),
+                '4': ratings.count(4),
+                '3': ratings.count(3),
+                '2': ratings.count(2),
+                '1': ratings.count(1)
+            }
+        }
+    
+    return jsonify({
+        'success': True,
+        'stats': component_stats
+    })
 
 @admin.route('/admin/teacher/<int:teacher_id>/profile')
 @login_required
@@ -449,7 +589,45 @@ from datetime import datetime, timedelta
 from app.models.attendance import Attendance
 from app.models.user import User
 
-@admin.route('/admin/task-file/<filename>')
+@admin.route('/admin/tasks/<int:task_id>/details')
+@login_required
+@admin_required
+def get_task_details(task_id):
+    task = TeacherTask.query.get_or_404(task_id)
+    completion_image_url = None
+    if task.completion_image:
+        completion_image_url = url_for('static', filename=task.completion_image)
+
+    return jsonify({
+        'id': task.id,
+        'title': task.title,
+        'description': task.description,
+        'assigned_to': f"{task.assignee.first_name} {task.assignee.last_name}",
+        'assigned_by': f"{task.assigner.first_name} {task.assigner.last_name}",
+        'due_date': task.due_date.strftime('%Y-%m-%d %H:%M'),
+        'created_at': task.created_at.strftime('%Y-%m-%d %H:%M'),
+        'status': task.status,
+        'priority': task.priority,
+        'completion_notes': task.completion_notes,
+        'completion_image': completion_image_url,
+        'completed_at': task.completed_at.strftime('%Y-%m-%d %H:%M') if task.completed_at else None,
+        'task_file': task.task_file
+    })
+
+@admin.route('/admin/tasks/<int:task_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_task(task_id):
+    task = TeacherTask.query.get_or_404(task_id)
+    try:
+        db.session.delete(task)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Task deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin.route('/admin/-file/<filename>')
 @login_required
 @admin_required
 def view_task_file(filename):
